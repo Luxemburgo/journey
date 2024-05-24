@@ -1,7 +1,6 @@
-import {urlToObj} from "../utils.js"
-import router from "../router.js";
-import {render} from "./render.js";
-
+import {urlToObj} from "../utils.js?v=1"
+import router from "../router.js?v=1";
+import {render} from "./render.js?v=1";
 
 window.onpopstate = e => {
     // console.log(e);

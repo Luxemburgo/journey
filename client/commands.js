@@ -1,4 +1,4 @@
-import {request, responseToObj, urlToObj} from "../utils.js"
+import {request, responseToObj, urlToObj} from "../utils.js?v=1"
 
 var commands = {};
 

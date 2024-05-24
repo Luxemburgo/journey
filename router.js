@@ -1,4 +1,10 @@
-const controllers = {};
+let controllers = {};
+
+if(typeof document != "undefined" && document.documentElement.controllers) {
+    
+    controllers = document.documentElement.controllers;
+
+}
 
 export default async (model, message, routes, baseDir = "") => {
 
@@ -72,22 +78,22 @@ export default async (model, message, routes, baseDir = "") => {
   
     const controller = controllers[model?.controller ?? 0] ?? ((model, message)=>({model, html: ""}));
 
-    if(!("root" in controllers)) {
+    if(!("/root.js" in controllers)) {
         try {
             
             const rootController = await import(baseDir + "/root.js");
-            controllers["root"] = rootController.default;
+            controllers["/root.js"] = rootController.default;
             
         } catch (error) {
             
-            controllers["root"] = null;
+            controllers["/root.js"] = null;
 
         }
     }
 
-    if(controllers["root"]) {
+    if(controllers["/root.js"]) {
 
-        return controllers["root"](model, message, controller);
+        return controllers["/root.js"](model, message, controller);
     
     }
 

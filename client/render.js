@@ -1,6 +1,6 @@
-import commands from "./commands.js";
-import {compareNodes} from "./DOMDiff.js";
-import { deepClone } from "../utils.js";
+import commands from "./commands.js?v=1";
+import {compareNodes} from "./DOMDiff.js?v=1";
+// import { deepClone } from "../utils.js";
 
 
 function diffEvents(el, updates, callback) {
@@ -112,14 +112,17 @@ function addEvents(callback) {
 
 }
 
-const start = new Date();
+// const start = new Date();
 
-window.stateHistory = [];
+// window.stateHistory = [];
 
 export async function render(config) {
 
-
     // const time = performance.now();
+
+    if((config?.message?.controller ?? config?.model?.controller ?? "") != (config?.model?.controller ?? "") ) {
+        return;
+    }
 
     const state = config.controller ? 
         
@@ -203,11 +206,13 @@ export async function render(config) {
 
     // document.documentElement.model = state.model;
   
-    (state.commands ?? []).filter(c => c.name).forEach(command =>
+    (state.commands ?? []).filter(c => c.name).forEach(command => {
         
+        command.controller = state.model.controller;
+
         commands[command.name](command, message => render({...config, message}))
         
-    );
+    });
 
     // console.log(`Total update time: ${Math.round(performance.now() - time)}`);
  
@@ -215,4 +220,4 @@ export async function render(config) {
 
 }
 
-window.render = render;
+// window.render = render;

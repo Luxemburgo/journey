@@ -84,7 +84,7 @@ export function createHTTPHandler(config) {
                             document.documentElement.apiURL = "${config.apiURL ?? ""}";
                             ${config.renderCallback ? `window.renderCallback = ${config.renderCallback.toString()};` : ""}
                         </script>
-                        <script src="https://atlas.ar/journey/client/index.js" type="module"></script>
+                        ${(config.includeScripts ?? []).map(url => /*html*/`<script type="module" src="${url}"></script>`).join("")}
                     </div>
                 `
                 .replace(/<!--[\s\S]*?-->/g, '')
@@ -107,7 +107,7 @@ export function createHTTPHandler(config) {
             status: 200,
             headers: {
                 "content-type": mime.getType(pathname.split(".")[1] ?? "html") + "; charset=utf-8",
-                "Cache-Control": (url.href.match(/tailwind\.css|\.js$|\?$|^(?!.*\.[\?A-Za-z0-9]+$).*$/g) ? "must-revalidate, no-store, no-cache, private" : "public, max-age=360000"),
+                "Cache-Control": config.cacheControl?.(url) ?? "public, max-age=360000",
                 // "Last-Modified": lastModified
             }
         });

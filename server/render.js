@@ -15,7 +15,7 @@ export default async function render(config) {
     :
         ({...config?.model})
     ;
-    
+
     
     config.model = state.model;
 

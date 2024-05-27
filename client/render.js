@@ -151,7 +151,7 @@ export async function render(config) {
 
         }
 
-        state.html = state.html.replace(/<!--[\s\S]*?-->/g, '').replace(/>\s+/g, '>').replace(/\s+</g, '<').replace(/\n/g, '');
+        state.html = state.html.replace(/<!--[\s\S]*?-->/g, ''); //.replace(/>\s+/g, '>').replace(/\s+</g, '<').replace(/\n/g, '');
 
         const newDOM = new DOMParser().parseFromString(state.html, "text/html").documentElement;
         

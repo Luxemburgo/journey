@@ -44,7 +44,11 @@ export default async (model, message, routes, baseDir = "") => {
 
         if(model.url.hash) document.querySelector(model.url.hash)?.scrollIntoView();
 
-        for(const route in routes) {
+        const routesKeys = Object.keys(routes).sort().reverse();
+
+        for(const key in routesKeys) {
+
+            const route = routesKeys[key];
 
             const result = message.data.pathname.match(new RegExp(routes[route].regexp));
         

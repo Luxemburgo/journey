@@ -1,5 +1,5 @@
 import {urlToObj} from "../utils.js?v=1"
-import router from "../router.js?v=1";
+import router from "../router.js?v=2";
 import {render} from "./render.js?v=2";
 
 window.onpopstate = e => {

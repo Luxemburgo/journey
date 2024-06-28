@@ -1,6 +1,20 @@
 import { bundle } from "https://deno.land/x/emit/mod.ts";
 import * as path from 'https://deno.land/std/path/mod.ts';
 import { createRouting } from "./routing.js";
+import { unlinkSync } from "https://deno.land/std@0.110.0/node/fs.ts";
+import { parse } from "https://deno.land/std@0.110.0/flags/mod.ts";
+
+let fileContent = '';
+
+
+const args = parse(Deno.args);
+
+if (args.imports) {
+    const imports = args.imports.split(" ");
+    for (const imp of imports) {
+        fileContent += `import '${imp}';\n`;
+    }
+}
 
 // Ruta del archivo que contiene el objeto routes
 const routesFilePath = './routes.json';
@@ -9,7 +23,6 @@ const routesFilePath = './routes.json';
 const routes = createRouting("./src/pages");
 
 // Crear el contenido del archivo
-let fileContent = '';
 
 // Agregar las importaciones al principio del archivo
 for (const key in routes) {
@@ -51,4 +64,4 @@ Deno.writeFileSync(mainOutputFile, mainData);
 
 console.log('Archivo main.js generado exitosamente.');
 
-Deno.unlinkSync("./generatedRoutes.js");
+unlinkSync("./generatedRoutes.js");

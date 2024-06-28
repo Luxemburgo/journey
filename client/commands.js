@@ -19,7 +19,7 @@ commands.login = async (options, callback) => {
 
 commands.fetch = async (options, callback) => {
 
-    const resp = await request({...options.data, apiURL: document.documentElement.apiURL, token: localStorage.getItem("token")});
+    const resp = await request({...options.data, apiURL: document.documentElement.apiURL, token: getCookie("PHPSESSID")});
 
     if(resp.status == 401) {
 
@@ -36,7 +36,7 @@ commands.fetch = async (options, callback) => {
 
 commands.multiFetch = async (options, callback) => {
 
-    const promises = Object.keys(options.data).map((key) => request({...options.data[key], apiURL: document.documentElement.apiURL, token: localStorage.getItem("token")}));
+    const promises = Object.keys(options.data).map((key) => request({...options.data[key], apiURL: document.documentElement.apiURL, token: getCookie("PHPSESSID")}));
 
     const responses = await Promise.all(promises);
 
@@ -109,6 +109,17 @@ commands.showModal = (options, callback) => {
     if(options.message)
         callback({name: options.message, data: options?.data});
 
+}
+
+function getCookie(name) {
+    let cookieArr = document.cookie.split(";");
+    for(let i = 0; i < cookieArr.length; i++) {
+        let cookiePair = cookieArr[i].split("=");
+        if(name == cookiePair[0].trim()) {
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+    return null;
 }
 
 export default commands;

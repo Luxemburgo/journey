@@ -22,8 +22,10 @@ if(window.localStorage.getItem("model")) {
 
 }
 
-await render({
-    model: document.documentElement.model,
-    controller: router,
-    routes: document.documentElement.routes
+window.addEventListener("load", () => {
+    render({
+        model: document.documentElement.model,
+        controller: router,
+        routes: document.documentElement.routes
+    });
 });

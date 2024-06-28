@@ -8,10 +8,13 @@ if(typeof document != "undefined" && document.documentElement.controllers) {
 
 export default async (model, message, routes, baseDir = "") => {
 
-    if(!message && !model) {
+    if(!message && !model?.url) {
 
         return {
-            model: {},
+            model: {
+                ...(model ?? {}),
+                url: true
+            },
             commands: [{ name: "navigate", message: "navigation" }]
         }
 

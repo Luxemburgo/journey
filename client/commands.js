@@ -19,7 +19,7 @@ commands.login = async (options, callback) => {
 
 commands.fetch = async (options, callback) => {
 
-    const resp = await request({...options.data, apiURL: document.documentElement.apiURL, token: getCookie("PHPSESSID")});
+    const resp = await request({...options.data, apiURL: window.journey.apiURL, token: getCookie("PHPSESSID")});
 
     if(resp.status == 401) {
 
@@ -36,7 +36,7 @@ commands.fetch = async (options, callback) => {
 
 commands.multiFetch = async (options, callback) => {
 
-    const promises = Object.keys(options.data).map((key) => request({...options.data[key], apiURL: document.documentElement.apiURL, token: getCookie("PHPSESSID")}));
+    const promises = Object.keys(options.data).map((key) => request({...options.data[key], apiURL: window.journey.apiURL, token: getCookie("PHPSESSID")}));
 
     const responses = await Promise.all(promises);
 

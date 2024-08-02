@@ -45,7 +45,7 @@ for (const key in routes) {
   }
 }
 
-fileContent += '};\n\ndocument.documentElement.controllers = routes;\n';
+fileContent += '};\n\nwindow.journey.controllers = routes;\n';
 
 // Escribir el contenido en un archivo nuevo
 const outputFile = path.join(Deno.cwd(), 'generatedRoutes.js');

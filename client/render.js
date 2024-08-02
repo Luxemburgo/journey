@@ -1,6 +1,6 @@
 import commands from "./commands.js?v=1";
 import {compareNodes} from "./DOMDiff.js?v=1";
-// import { deepClone } from "../utils.js";
+import { deepClone } from "../utils.js";
 
 
 function diffEvents(el, updates, callback) {
@@ -116,6 +116,8 @@ function addEvents(callback) {
 
 // window.stateHistory = [];
 
+
+
 export async function render(config) {
 
     // const time = performance.now();
@@ -160,11 +162,11 @@ export async function render(config) {
         // if(document.startViewTransition && config?.message?.name == "navigation" && config.message.data?.stateAction != "replace") {
             
         //     document.startViewTransition(() => compareNodes(
-        //         document.documentElement,
+        //         window.journey,
         //         newDOM,
         //         (node, updates) => {
         //             // console.log(updates);
-        //             diffEvents(node, updates, message => render({...config, model: document.documentElement.model, message}));
+        //             diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
         //         }
         //     ));
 
@@ -175,15 +177,15 @@ export async function render(config) {
                 newDOM,
                 (node, updates) => {
                     // console.log(updates);
-                    diffEvents(node, updates, message => render({...config, model: document.documentElement.model, message}));
+                    diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
                 }
             );
 
         // }
 
-        if(!document.documentElement.DOM) {
-            addEvents(message => render({...config, model: document.documentElement.model, message}))
-            document.documentElement.DOM = true;
+        if(!window.journey.DOM) {
+            addEvents(message => render({...config, model: window.journey.model, message}))
+            window.journey.DOM = true;
         }
     
     }else{
@@ -192,25 +194,28 @@ export async function render(config) {
 
     }
 
-    document.documentElement.model = config.model;
+    window.journey.model = config.model;
 
     // twind.install({hash: false});
 
-    // document.documentElement.DOM = document.documentElement;
+    // window.journey.DOM = window.journey;
 
     // window.history.replaceState(state.model, null);
     
     // console.log({in: config, out: state});
     
-    // window.stateHistory.push({model: state.model ? state.model : null, time: state.time});
+    
+    if("stateHistory" in window && !window.play) {
+        window.stateHistory.push({model: deepClone(state.model), time: performance.now()});
+    }
 
-    // document.documentElement.model = state.model;
+    // window.journey.model = state.model;
   
     (state.commands ?? []).filter(c => c.name).forEach(command => {
         
         command.controller = state.model.controller;
 
-        commands[command.name](command, message => render({...config, message}))
+        commands[command.name](command, message => render({...config, message: {...message, command}}))
         
     });
 
@@ -220,4 +225,4 @@ export async function render(config) {
 
 }
 
-// window.render = render;
+window.render = render;

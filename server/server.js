@@ -78,10 +78,12 @@ export function createHTTPHandler(config) {
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden}</style>
                         <script>
-                            document.documentElement.routes = ${JSON.stringify(routes)};
-                            document.documentElement.model = ${JSON.stringify(app.state.model)};
-                            document.documentElement.apiURL = "${config?.apiURL ?? ""}";
-                            ${config?.renderCallback ? `window.renderCallback = ${config.renderCallback.toString()};` : ""}
+                            window.journey = {
+                                routes: ${JSON.stringify(routes)},
+                                model: ${JSON.stringify(app.state.model)},
+                                apiURL: "${config?.apiURL ?? ""}"
+                            };
+                            ${config?.renderCallback ? `window.journey.renderCallback = ${config.renderCallback.toString()};` : ""}
                         </script>
                     </div>
                 `

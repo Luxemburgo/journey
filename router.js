@@ -1,8 +1,8 @@
 let controllers = {};
 
-if(typeof document != "undefined" && document.documentElement.controllers) {
+if(window.journey?.controllers) {
     
-    controllers = document.documentElement.controllers;
+    controllers = window.journey.controllers;
 
 }
 
@@ -68,6 +68,11 @@ export default async (model, message, routes, baseDir = "") => {
             }        
         }
 
+        if(typeof document != "undefined") {
+            setTimeout(() => {document.querySelector("[autofocus]")?.focus();}, 0);
+        }
+
+
         if(!model.controller) throw new Error("Not found");
 
     }
@@ -78,7 +83,7 @@ export default async (model, message, routes, baseDir = "") => {
             document.body.classList.add("animate-pulse");
             document.body.inert = true;
         }
-        
+
         controllers[model.controller] = (await import(baseDir + model.controller)).default;
 
     }

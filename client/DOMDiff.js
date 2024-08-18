@@ -32,8 +32,9 @@ export function compareNodes(node1, node2, changesCallback) {
             }
         }
 
-        const node2Children = Array.from(node2.childNodes ?? []);
+        const node2Children = node2.hasAttribute("ignore-diff") ? [] : Array.from(node2.childNodes ?? []);
 
+        if(!node1.hasAttribute("ignore-diff"))
         for (const child of (node1.childNodes ?? [])) {
 
             let match = false;

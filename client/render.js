@@ -120,7 +120,7 @@ function addEvents(callback) {
 
 export async function render(config) {
 
-    // const time = performance.now();
+    const time = performance.now();
 
     if((config?.message?.controller ?? config?.model?.controller ?? "") != (config?.model?.controller ?? "") ) {
         return;
@@ -159,18 +159,20 @@ export async function render(config) {
         
         // newDOM.ownerDocument.body.append(document.querySelector("#scripts").cloneNode(true));
 
-        // if(document.startViewTransition && config?.message?.name == "navigation" && config.message.data?.stateAction != "replace") {
+        if(false && document.startViewTransition && config?.message?.name == "navigation" && config.message.data?.stateAction != "replace") {
             
-        //     document.startViewTransition(() => compareNodes(
-        //         window.journey,
-        //         newDOM,
-        //         (node, updates) => {
-        //             // console.log(updates);
-        //             diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
-        //         }
-        //     ));
+            document.startViewTransition(() => compareNodes(
+                document.documentElement,
+                newDOM,
+                (node, updates) => {
+                    // console.log(updates);
+                    diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
+                }
+            ));
 
-        // }else{
+        }else{
+
+            // const time = performance.now();
 
             compareNodes(
                 document.documentElement,
@@ -180,8 +182,10 @@ export async function render(config) {
                     diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
                 }
             );
+            
+            // console.log(`Total update time: ${Math.round(performance.now() - time)}`);
 
-        // }
+        }
 
         if(!window.journey.DOM) {
             addEvents(message => render({...config, model: window.journey.model, message}))
@@ -219,7 +223,7 @@ export async function render(config) {
         
     });
 
-    // console.log(`Total update time: ${Math.round(performance.now() - time)}`);
+    console.log(`Total update time: ${Math.round(performance.now() - time)}`);
  
     return {config, state};
 

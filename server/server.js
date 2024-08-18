@@ -63,7 +63,7 @@ export function createHTTPHandler(config) {
                 });
     
 
-                if(app.state.redirect) {
+                if(app.state?.redirect) {
                 
                     return new Response("", {
                         status: 302,
@@ -71,12 +71,12 @@ export function createHTTPHandler(config) {
                     });
     
                 }
-    
-    
-                body = "<!DOCTYPE html>"
-                + (app?.state?.html ?? "").replace(/<\/html>/, "") + /*html*/`
+
+
+                body = `<!DOCTYPE html>` +
+                    (app?.state?.html ?? "").replace(/<\/html>/, "") + /*html*/`
                     <div id="scripts">
-                        <style id="js-only-style">.js-only {visibility: hidden}</style>
+                        <style id="js-only-style">#loading {display: none} .js-only {visibility: hidden}</style>
                         <script>
                             window.journey = {
                                 routes: ${JSON.stringify(routes)},
@@ -88,11 +88,11 @@ export function createHTTPHandler(config) {
                     </div>
                 `
                 .replace(/<!--[\s\S]*?-->/g, '')
-                .replace(/>\s+/g, '>')
-                .replace(/\s+</g, '<')
-                .replace(/\n/g, '')
+                // .replace(/>\s+/g, '>')
+                // .replace(/\s+</g, '<')
+                // .replace(/\n/g, '')
                 + "</html>";
-    
+
             } catch (error) {
                 
                 if(error.message != "Not found") console.log(error);
@@ -103,13 +103,16 @@ export function createHTTPHandler(config) {
         }
     
     
-        const response = new Response(body ?? "", {
-            status: 200,
-            headers: {
-                "content-type": mime.getType(pathname.split(".")[1] ?? "html") + "; charset=utf-8",
-                // "Last-Modified": lastModified
+        const response = new Response(
+            body ?? "", 
+            {
+                status: 200,
+                headers: {
+                    "content-type": mime.getType(pathname.split(".")[1] ?? "html") + "; charset=utf-8",
+                    // "Last-Modified": lastModified
+                }
             }
-        });
+        );
 
         if(file && config?.cacheControl?.(url)) {
             

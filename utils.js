@@ -65,6 +65,7 @@ export function request(options) {
     const requestOptions = {
         method: options.method ?? "GET",
         insecure: true,
+        credentials: "include",
         headers: {
             Authorization: options.token ? "Basic " + btoa("token:" + options.token) : undefined,
             ...options.body?.constructor?.name != 'FormData' && {'Content-Type': 'application/json'}

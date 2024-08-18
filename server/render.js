@@ -24,7 +24,7 @@ export default async function render(config) {
         state.html = config.renderCallback(state.model, state.html ?? "");
 
     }
-    
+   
     for(const command of (state.commands ?? []).filter(c => c.name)) {
         
         if(command.name == "navigate" && command.data?.location) {

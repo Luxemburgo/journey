@@ -4,14 +4,17 @@ import {render} from "./render.js?v=3";
 import { deepClone } from "../utils.js";
 
 window.onpopstate = e => {
-    // console.log(e);
-    // if(location.href.includes("#")) return;
+
     render({
         model: window.journey.model,
-        controller: router,
-        message: {name: "navigation", data: urlToObj(new URL(location))},
-        routes: window.journey.routes
+        message: {name: "navigation", command: {name: "navigateBack"}, data: urlToObj(new URL(location))},
+        controller: router({
+            routes: window.journey.routes,
+            controllers: window.journey.controllers,
+            // baseDir: location.protocol + "//" + location.host
+        }),
     });
+
 }
 
 if(window.localStorage.getItem("model")) {
@@ -27,8 +30,11 @@ window.addEventListener("load", async () => {
     
     await render({
         model: window.journey.model,
-        controller: router,
-        routes: window.journey.routes
+        controller: router({
+            routes: window.journey.routes,
+            controllers: window.journey.controllers,
+            // baseDir: location.protocol + "//" + location.host
+        }),
     });
 
     document.querySelector("[autofocus]")?.focus();

@@ -1,6 +1,5 @@
 import {request, responseToObj, urlToObj} from "../utils.js?v=1"
 
-var commands = {};
 
 commands.login = async (options, callback) => {
 
@@ -17,39 +16,48 @@ commands.login = async (options, callback) => {
     callback({name: options.message, data: resp});
 }
 
-commands.fetch = async (options, callback) => {
+export const fetch = async (options) => {
 
-    const resp = await request({...options.data, apiURL: window.journey.apiURL/*, token: getCookie("PHPSESSID")*/});
+    return async callback => {
 
-    if(resp.status == 401) {
+        const resp = await request({
+            ...options.data,
+            apiURL: options.model?.application?.apiURL ?? "",
+            token: options.model?.request?.cookies?.PHPSESSID
+        });
 
-        callback({name: "sessionFail", data: resp});
+        if(resp.status == 401) {
 
-    }else{
+            return await callback({name: "sessionFail", data: resp});
 
-        if(options.message) callback({name: options.message, data: resp});
+        }else{
 
+            if(options.message) return await callback({name: options.message, data: resp});
+
+        }
     }
     
-    //console.log("message", {command: "fetch", message: options.message, data: body});
 }
 
-commands.multiFetch = async (options, callback) => {
+export const multiFetch = async (options) => {
 
-    const promises = Object.keys(options.data).map((key) => request({...options.data[key], apiURL: window.journey.apiURL/*, token: getCookie("PHPSESSID")*/}));
+    return async callback => {
 
-    const responses = await Promise.all(promises);
+        const promises = Object.keys(options.data).map((key) => request(options.data[key]));
 
-    const result = {};
+        const responses = await Promise.all(promises);
 
-    for (let i = 0; i < responses.length; i++) {
+        const result = {};
 
-        if(responses[i].status == 401) callback({name: "sessionFail", data: responses[i]});
+        for (let i = 0; i < responses.length; i++) {
 
-        result[Object.keys(options.data)[i]] = responses[i];
+            if(responses[i].status == 401) return await callback({name: "sessionFail", data: responses[i]});
+
+            result[Object.keys(options.data)[i]] = responses[i];
+        }
+
+        return await callback({name: options.message, data: result});
     }
-
-    callback({name: options.message, data: result});
 
 }
 
@@ -125,4 +133,4 @@ function getCookie(name) {
     return null;
 }
 
-export default commands;
+

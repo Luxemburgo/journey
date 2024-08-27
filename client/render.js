@@ -1,38 +1,31 @@
 import commands from "./commands.js?v=1";
-import {compareNodes} from "./DOMDiff.js?v=1";
+import { DOMDiff } from "./DOMDiff.js?v=1";
 import { deepClone } from "../utils.js";
 
+function diffEvents(changes, callback) {
 
-function diffEvents(el, updates, callback) {
+    changes.addedChildren.forEach(change => 
+        change.children.filter(child => child.nodeType==1).forEach(child => 
+            [child, ...child.querySelectorAll("a, [messages]")].forEach(el => updateEvents(el, callback))
+        )
+    );
+    
+    [
+        ...changes.changedAttributes.filter(change => change.name=="messages"),
+        ...changes.deletedAttributes.filter(change => change.name=="messages")
+    ]
+    .forEach(change => updateEvents(change.node, callback));
 
-    updates.filter(update =>
-        update.type == "addedChildren" ||
-        (update.type.includes("Attributes") && update.changes.filter(i => i.name == "messages").length)
-    )
-    .forEach(update => {
-        
-        if(update.type == "addedChildren") {
-            update.changes.filter(i => i.nodeType === 1).forEach(i => {
-                updateEvents(i, callback);
-                i.querySelectorAll("a, [messages]").forEach(e => updateEvents(e, callback));
-            });
-        }else{
-            updateEvents(el, callback);
-        }
-
-    });
 }
 
 
 function updateEvents(el, callback) {
 
+    (el.listeners ?? []).forEach(listener => el.removeEventListener(listener.eventName, listener.handler));
+
     if(el.hasAttribute("messages")) {
 
         if(!el.listeners) el.listeners = [];
-
-        el.listeners.forEach(listener => el.removeEventListener(listener.eventName, listener.handler));
-
-        // console.log("events updated", el);
 
         const messages = el.getAttribute("messages");
 
@@ -42,6 +35,8 @@ function updateEvents(el, callback) {
             .map(messageString => ({ eventName: messageString.split("=")[0].trim(), name: messageString.split("=")[1].trim() }))
             .forEach(message => {
                 
+                // console.log("events updated", el, message.eventName, message.name);
+
                 const preventDefault = message.eventName.includes("!");
 
                 message.eventName = message.eventName.replace("!", "");
@@ -73,18 +68,28 @@ function updateEvents(el, callback) {
 
     };
 
-    if(el.tagName == "A" && !(el.getAttribute("target") == "_blank") && !el.href.match(/^mailto:|^tel:/g)) {
+    if(el.tagName == "A") {
 
         if(!el.onclick) {
 
             ////console.log("link updated", el);
 
-            el.onclick = e => {
+            el.onclick = async e => {
+                
+                if((el.getAttribute("target") == "_blank") || el.href.match(/^mailto:|^tel:/g)) {
+                    return;
+                }
+
                 e.preventDefault();
+
+                if(el.href.includes("#")) {
+                    document.getElementById(el.href.split("#")[1])?.scrollIntoView({behavior: "smooth"});
+                    return;
+                }
                 
                 if(!el.listeners?.filter(e => e.eventName=="click").length) {
 
-                    commands.navigate(
+                    await commands.navigate(
                         {
                             data: {url: e.currentTarget.href, stateAction: e.currentTarget.getAttribute("data-state")},
                             message: e.currentTarget.getAttribute("data-message") ?? "navigation"
@@ -92,6 +97,8 @@ function updateEvents(el, callback) {
                         callback
                     );
                     
+                    window.scrollTo({top: 0, left: 0/*, behavior: "smooth"*/}); 
+
                 }
 
             }
@@ -112,40 +119,33 @@ function addEvents(callback) {
 
 }
 
-// const start = new Date();
-
-// window.stateHistory = [];
 
 
 
 export async function render(config) {
 
-    const time = performance.now();
+    const profiling = [{duration: 0, total: 0, stage: "start", time: performance.now()}];
 
     if((config?.message?.controller ?? config?.model?.controller ?? "") != (config?.model?.controller ?? "") ) {
         return;
     }
 
-    const state = config.controller ? 
+    const state = config?.controller ? 
         
-        await config.controller(
-            config.model, 
-            config.message, 
-            config.routes, 
-            location.protocol + "//" + location.host
-        )
+        await config.controller(config.model, config.message)
 
     :
         ({model: config?.model})
     ;
-    
 
-    // state.time = parseInt((new Date() - start) / 100)
 
+    config.model = state?.model;
     
+    window.journey = {...(window.journey ?? {}), model: config.model};
+
+
     if(state.html) {
         
-        // console.log((config?.message?.name ?? "") + " => Render");
 
         if(window.renderCallback) {
 
@@ -153,11 +153,17 @@ export async function render(config) {
 
         }
 
-        state.html = state.html.replace(/<!--[\s\S]*?-->/g, ''); //.replace(/>\s+/g, '>').replace(/\s+</g, '<').replace(/\n/g, '');
+        // state.html = state.html.replace(/<!--[\s\S]*?-->/g, ''); //.replace(/>\s+/g, '>').replace(/\s+</g, '<').replace(/\n/g, '');
 
         const newDOM = new DOMParser().parseFromString(state.html, "text/html").documentElement;
-        
-        // newDOM.ownerDocument.body.append(document.querySelector("#scripts").cloneNode(true));
+
+        profiling.push({
+            duration: Math.round(performance.now() - profiling.slice(-1)[0].time),
+            total: Math.round(performance.now() - profiling[0].time),
+            stage: "html",
+            time: performance.now(),
+        });
+
 
         if(false && document.startViewTransition && config?.message?.name == "navigation" && config.message.data?.stateAction != "replace") {
             
@@ -172,61 +178,50 @@ export async function render(config) {
 
         }else{
 
-            // const time = performance.now();
+            const changes = DOMDiff(document.documentElement, newDOM, profiling)
 
-            compareNodes(
-                document.documentElement,
-                newDOM,
-                (node, updates) => {
-                    // console.log(updates);
-                    diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
-                }
-            );
+            diffEvents(changes, message => render({...config, model: window.journey.model, message}));
+
+            console.log(profiling.slice(-1)[0].total, profiling, changes);
             
-            // console.log(`Total update time: ${Math.round(performance.now() - time)}`);
-
         }
 
-        if(!window.journey.DOM) {
-            addEvents(message => render({...config, model: window.journey.model, message}))
-            window.journey.DOM = true;
-        }
+        // if(!window.journey?.DOM) {
+        //     addEvents(message => render({...config, model: window.journey.model, message}))
+        //     window.journey.DOM = true;
+        // }
     
-    }else{
-
-        // console.log(config?.message?.name ?? "");
 
     }
 
-    window.journey.model = config.model;
 
-    // twind.install({hash: false});
-
-    // window.journey.DOM = window.journey;
-
-    // window.history.replaceState(state.model, null);
-    
-    // console.log({in: config, out: state});
-    
     
     if("stateHistory" in window && !window.play) {
         window.stateHistory.push({model: deepClone(state.model), time: performance.now()});
     }
 
-    // window.journey.model = state.model;
   
-    (state.commands ?? []).filter(c => c.name).forEach(command => {
+    (state.commands ?? []).filter(c => c.name || typeof c == "function").forEach(command => {
         
-        command.controller = state.model.controller;
+        if(typeof command == "function") {
+            
+            command( message => render({...config, message: {...message, command}}) );
 
-        commands[command.name](command, message => render({...config, message: {...message, command}}))
+        }else{
+
+            command.controller = state.model.controller;
+
+            commands[command.name](command, message => render({...config, message: {...message, command}}))
+
+        }
         
     });
 
-    console.log(`Total update time: ${Math.round(performance.now() - time)}`);
+
  
     return {config, state};
 
 }
 
+// window.stateHistory = [];
 window.render = render;

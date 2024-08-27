@@ -1,14 +1,10 @@
 import { exists } from "https://deno.land/std/fs/mod.ts";
 import { mime } from "https://deno.land/x/mimetypes/mod.ts";
-import { createRouting } from "./routing.js";
 import render from "./render.js";
-import router from "../router.js";
 
 
 export function createHTTPHandler(config) {
     
-    const routes = createRouting(config?.routingDir ?? "");
-
     const defaultServer = async (request) => {
 
         const url = new URL(request.url);
@@ -23,7 +19,7 @@ export function createHTTPHandler(config) {
     
         request.cookies = parseCookies(request.headers);
     
-        for(const dir of [...(config?.assetsDirs ?? []), config?.routingDir ?? ""]) {
+        for(const dir of [...(config?.assetsDirs ?? ["./public", "./"])]) {
             try {
                 
                 const fileName = dir.replaceAll("%20", " ")/*.replace(/^\//g, "")*/ + pathname;
@@ -53,15 +49,16 @@ export function createHTTPHandler(config) {
             try {
 
                 const app = await render({
-                    model: config?.model ?? {},
-                    controller: router,
+                    model: {...(config?.model ?? {}), request},
+                    controller: config?.controller,
                     request: request,
                     apiURL: config?.apiURL ?? "",
                     renderCallback: config?.renderCallback ?? null,
-                    routes: routes,
-                    baseDir: "file:///" + Deno.cwd() + "/" + (config?.routingDir ?? "")
                 });
+
+                const routes = config?.controller?.config?.routes ?? [];
     
+                delete(app?.state?.model?.request);
 
                 if(app.state?.redirect) {
                 
@@ -76,7 +73,7 @@ export function createHTTPHandler(config) {
                 body = `<!DOCTYPE html>` +
                     (app?.state?.html ?? "").replace(/<\/html>/, "") + /*html*/`
                     <div id="scripts">
-                        <style id="js-only-style">#loading {display: none} .js-only {visibility: hidden}</style>
+                        <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
                         <script>
                             window.journey = {
                                 routes: ${JSON.stringify(routes)},

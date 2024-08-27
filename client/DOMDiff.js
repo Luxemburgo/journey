@@ -1,18 +1,48 @@
-export function compareNodes(node1, node2, changesCallback) {
-    
+export function DOMDiff(node1, node2, profiling) {
+
     const changes = {
         deletedAttributes: [],
-        addedAttributes: [],
         changedAttributes: [],
         deletedChildren: [],
         addedChildren: [],
-        textChanged: []
+        changedTexts: []
     };
 
-    if(node1.nodeType === 3) {
+    nodesWalk = 0;
+    sortingTime = 0;
+    calcs = [];
+
+    if(!node1.isEqualNode(node2)) compareNodes(node1, node2, changes);
+
+    profiling.push({
+        duration: Math.round(performance.now() - profiling.slice(-1)[0].time),
+        total: Math.round(performance.now() - profiling[0].time),
+        calcs: calcs,
+        nodesWalk,
+        // clean: Math.round(cleanTime ?? 0),
+        sort: Math.round(sortingTime),
+        stage: "diffCalc",
+        time: performance.now(),
+    });
+
+
+    return changes;
+
+}
+
+let nodesWalk = 0;
+let sortingTime = 0;
+let calcs = [];
+
+export function compareNodes(node1, node2, changes) {
+    
+    let calcTime = performance.now();
+    let childrenCalcTime = 0;
+
+    if(node1.nodeType !== 1) {
 
         if(node1.textContent != node2.textContent) {
-            changes.textChanged.push({before: node1.textContent, after: node2.textContent});
+            changes.changedTexts.push({parentNode: node1.parentNode, node: node1, before: node1.textContent, after: node2.textContent});
             node1.textContent = node2.textContent;
         }
         
@@ -20,64 +50,94 @@ export function compareNodes(node1, node2, changesCallback) {
 
         for (const attr of (node1.attributes ?? [])) {
             if (node2.hasAttribute && !(node2.hasAttribute(attr.name))) {
-                changes.deletedAttributes.push({name: attr.name, value: attr.value});
+                changes.deletedAttributes.push({node: node1, name: attr.name, value: attr.value});
+                node1.removeAttribute(attr.name);
             }
         }
 
         for (const attr of (node2.attributes ?? [])) {
-            if (node1.hasAttribute && !(node1.hasAttribute(attr.name))) {
-                changes.addedAttributes.push({name: attr.name, value: attr.value});
-            } else if (node1.getAttribute(attr.name) !== attr.value) {
-                changes.changedAttributes.push({name: attr.name, value: attr.value});
-            }
+            
+            if (node1.getAttribute(attr.name) !== attr.value) {
+                
+                changes.changedAttributes.push({node: node1, name: attr.name, value: attr.value, oldValue: node1.getAttribute(attr.name)});
+                node1.setAttribute(attr.name, attr.value);
+
+            }           
+
         }
 
-        const node2Children = node2.hasAttribute("ignore-diff") ? [] : Array.from(node2.childNodes ?? []);
 
-        if(!node1.hasAttribute("ignore-diff"))
-        for (const child of (node1.childNodes ?? [])) {
+        const node1Children = Array.from(node1.childNodes ?? []);
+        const node2Children = Array.from(node2.childNodes ?? []);
+
+        for (const child of node1Children) {
 
             let match = false;
 
-            for (const newChild of node2Children) {
-                if (!newChild.matched && compareNodesByCriteria(child, newChild)) {
+            for (const newChild of node2Children.filter(i => !i.matched)) {
+                nodesWalk ++;
+                if(child.isEqualNode(newChild)) {
+                    
                     newChild.matched = true;
+                    
                     match = true;
+                    
                     child.sortIndex = node2Children.indexOf(newChild);
-                    compareNodes(child, newChild, changesCallback);
+                    
+                    break;
+                }
+            }
+
+            if (!match) 
+            for (const newChild of node2Children.filter(i => !i.matched)) {
+                nodesWalk ++;
+                if (compareNodesByCriteria(child, newChild)) {
+                    
+                    newChild.matched = true;
+                    
+                    match = true;
+                    
+                    child.sortIndex = node2Children.indexOf(newChild);
+                    
+                    if(!child.hasAttribute?.("blackbox") || !newChild.hasAttribute?.("blackbox")) 
+                        childrenCalcTime = compareNodes(child, newChild, changes);
+
                     break;
                 }
             }
 
             if (!match) {
-                changes.deletedChildren.push(child);
+                changes.deletedChildren.push({node: node1, child});
+                child.remove();
             }
         }
+
+        const addedChildren = [];
 
         for (const newChild of node2Children.filter(i => !i.matched)) {
             
             newChild.sortIndex = node2Children.indexOf(newChild);
             
-            changes.addedChildren.push(newChild);
-
+            addedChildren.push(newChild);
+        }
+        
+        if(addedChildren.length) {
+            changes.addedChildren.push({node: node1, children: addedChildren});
+            node1.append(...addedChildren);
         }
 
-        changes.deletedChildren.forEach(e => e.remove());
-        node1.append(...changes.addedChildren);
-        changes.deletedAttributes.forEach(a => node1.removeAttribute(a.name));
-        changes.addedAttributes.forEach(a => node1.setAttribute(a.name, a.value));
-        changes.changedAttributes.forEach(a => {node1.setAttribute(a.name, a.value); if(a.name=="value")node1.value=a.value;});
 
-        sortChilds(node1);
+        const sortStart = performance.now();
+        sortChilds(node1, changes);
+        sortingTime += performance.now() - sortStart;
         
     }
 
-    const result = Object.entries(changes)
-    .map(i => ({type: i[0], changes: i[1]}))
-    .filter(i => i.changes.length);
-    
-    if(result.length && changesCallback) changesCallback(node1, result);
+    calcTime = Math.round(performance.now() - calcTime - childrenCalcTime);
 
+    calcs.push({node: node1, time: calcTime});
+
+    return calcTime;
 
 }
 
@@ -94,23 +154,42 @@ function compareNodesByCriteria(node1, node2) {
     return true;
 }
 
-function sortChilds(element) {
-    let swapped = true;
-    
-    // Paso 3: Realizar el bucle principal
-    while (swapped) {
-      swapped = false;
-    
-      // Paso 5: Iterar sobre los childNodes
-      for (let i = 1; i < element.childNodes.length; i++) {
-        const currentNode = element.childNodes[i];
-        const previousNode = element.childNodes[i - 1];
-    
-        // Paso 6: Comparar los índices y realizar el intercambio si es necesario
-        if (currentNode.sortIndex < previousNode.sortIndex) {
-          element.insertBefore(currentNode, previousNode);
-          swapped = true;
+function sortChilds(element, changes) {
+
+    let nodesArray = Array.from(element.childNodes).sort((a, b) => a.sortIndex - b.sortIndex);
+
+    for (let i = 0; i < nodesArray.length; i++) {
+        if (element.childNodes[i] !== nodesArray[i]) {
+            element.insertBefore(nodesArray[i], element.childNodes[i]);
         }
-      }
     }
+
+}
+
+
+function cleanTextNodes(node) {
+
+    // Crear un NodeIterator que recorra todos los nodos de texto
+    const nodeIterator = document.createNodeIterator(
+        node,                // Nodo raíz donde comenzará la iteración
+        NodeFilter.SHOW_TEXT,         // Filtro para mostrar solo nodos de texto
+        {
+            acceptNode: function(n) {
+                return n.textContent.replace(/\n/g,"").trim() == "" ? 
+                    NodeFilter.FILTER_ACCEPT
+                :
+                    NodeFilter.FILTER_REJECT
+                ;
+            }
+        }
+    );
+
+    let textNode;
+    const textNodes = [];
+
+    // Iterar sobre todos los nodos de texto encontrados
+    while ((textNode = nodeIterator.nextNode())) {
+        textNode.remove();
+    }
+
 }

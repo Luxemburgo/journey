@@ -3,7 +3,7 @@ import { existsSync } from "https://deno.land/std@0.224.0/fs/exists.ts";
 
 export function createRouting(directory) {
 
-    directory = directory.replaceAll("%20", " "); //.replace(/^\//g, "");
+    directory = (directory ?? "./src/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
 
     const routes = {};
 

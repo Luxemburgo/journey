@@ -1,15 +1,15 @@
-import { walkSync } from "https://deno.land/std/fs/mod.ts";
-import { existsSync } from "https://deno.land/std@0.224.0/fs/exists.ts";
+import { existsSync } from "jsr:@std/fs@1.0.3/exists";
+import { walkSync } from "jsr:@std/fs@1.0.3/walk";
 
-export function createRouting(directory) {
+export default (routingDir) => {
 
-    directory = (directory ?? "./src/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
+    routingDir = (routingDir ?? "./src/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
 
     const routes = {};
 
     let baseDir = "";
 
-    for (const dirEntry of walkSync(directory, {includeFiles: false})) {
+    for (const dirEntry of walkSync(routingDir, {includeFiles: false})) {
 
         if(baseDir == "") baseDir = dirEntry.path.replaceAll("\\", "/");
 

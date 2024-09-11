@@ -1,0 +1,15 @@
+{
+    "name": "@luxemburgo/journey",
+    "version": "0.7.0",
+    "exports": {
+        "./server": "./server/main.js",
+        "./tools": "./tools/main.js"
+    },
+    "license": "MIT",
+    "publish": {
+        "exclude": [
+            "old",
+            "src"
+        ]
+    }
+}

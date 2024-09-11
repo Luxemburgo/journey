@@ -1,46 +1,116 @@
-import {urlToObj} from "../utils.js?v=3"
-import router from "../router.js?v=3";
-import {render} from "./render.js?v=3";
-import { deepClone } from "../utils.js";
+import { urlToObj, deepClone } from "../../tools/utils.js"
+import createRouterController from "../../server/createRouterController.js";
+import { render } from "./render.js";
 
 window.onpopstate = e => {
 
     render({
         model: window.journey.model,
-        message: {name: "navigation", command: {name: "navigateBack"}, data: urlToObj(new URL(location))},
-        controller: router({
-            routes: window.journey.routes,
-            controllers: window.journey.controllers,
-            // baseDir: location.protocol + "//" + location.host
-        }),
+        message: {name: "navigation", isPopState: true, data: urlToObj(new URL(location))},
+        controller: window.journey.controller
     });
 
 }
 
-if(window.localStorage.getItem("model")) {
-
-    window.journey.model = {
-        ...window.journey.model,
-        ...JSON.parse(window.localStorage.getItem("model"))
-    }
-
-}
 
 window.addEventListener("load", async () => {
     
+    window.journey.controller = window.journey.controller ?? createRouterController({
+        routingDir: window.journey.router?.path,
+        routes: window.journey.router?.routes,
+        controllers: window.journey.controllers
+    });
+
+    if(window.localStorage.getItem("model")) {
+
+        window.journey.model = {
+            ...window.journey.model,
+            ...JSON.parse(window.localStorage.getItem("model"))
+        }
+    
+    }
+
+    var socket = null;
+
+    function connect() {
+
+        try {            
+            if(socket) {
+                socket.close(1000, 'Cerrando la conexión');
+                socket.onopen = null;
+                socket.onmessage = null;
+                socket.onerror = null;
+                socket.onclose = null;
+            }
+        } catch (error) {            
+        }
+
+        console.log("Connecting...");
+
+        socket = new WebSocket(window.location.protocol+"//"+window.location.host);
+
+        socket.onopen = e => {
+            console.log("Connection open");
+            
+            socket.send("ping");
+
+        };
+
+        socket.onclose = e => {
+            console.log("Connection closed");
+            setTimeout(() => {
+                
+                connect();
+                
+            }, 5000);
+        };
+
+        socket.onerror = e => {
+            console.log("Connection error");
+            setTimeout(() => {
+                
+                connect();
+                
+            }, 5000);
+        };
+
+        socket.onmessage = e => {
+            // console.log(e.data);
+            if(e.data =="Update!") {
+                window.updateHash(Math.round(Math.random()*10000));
+            }
+        };
+
+        
+
+    }
+
+    if(window.journey.hotReload) {
+        
+        connect();
+
+    }
+
     await render({
         model: window.journey.model,
-        controller: router({
-            routes: window.journey.routes,
-            controllers: window.journey.controllers,
-            // baseDir: location.protocol + "//" + location.host
-        }),
+        controller: window.journey.controller
     });
 
     document.querySelector("[autofocus]")?.focus();
 
+
 });
 
+window.updateHash = (hash) => {
+
+    window.journey.model.hash = hash;
+
+    render({
+        model: window.journey.model,
+        controller: window.journey.controller
+    });
+
+}
 
 window.record = () => {
 

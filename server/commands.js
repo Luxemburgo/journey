@@ -1,48 +1,58 @@
-import {request, urlToObj} from "../utils.js";
+import {urlToObj} from "../tools/utils.js"
 
-var commands = {};
+export const navigate = (options) => {
 
+    return async callback => {
 
-commands.navigate = async (options, callback) => {
+        const url = urlToObj(new URL(
+            options?.data?.url ?? "",
+            new URL(options?.model?.request?.url ?? window.location)
+        ));
 
-    return (await callback({name: options.message, data: urlToObj(new URL(options?.data?.url ?? "", new URL(options.request.url)))}));
+        // console.log(url);
+
+        if(options?.data?.redirect) {
+            
+            if(options?.model?.request) {
+                options.model.redirect = url.href;
+            }else{
+                window.location = url.href;
+            }
+
+            return {model: options.model};
+        }
+        
+        if(options?.data?.url && typeof window != "undefined") {
+            
+            if(options.data?.stateAction == "replace") 
+                window.history.replaceState({}, null, options.data.url);
+            else {
+                window.history.pushState({}, null, options.data.url);
+            }
+
+        }
+
+        return (await callback({
+            name: options.message ?? "navigation",
+            data: {
+                ...url,
+                stateAction: options.data?.stateAction
+            }
+        }));
+
+    }
 
 }
 
-commands.fetch = async (options, callback) => {
+export const navigateBack = () => {
 
-    const resp = await request({...options.data, apiURL: options.apiURL, token: options.request?.cookies?.PHPSESSID});
+    return async callback => {
 
-    if(resp.status == 401) {
-
-        return (await callback({name: "sessionFail", data: resp}));
-
-    }else{
-
-        if(options.message) return (await callback({name: options.message, data: resp}));
+        window.history.back();
 
     }
     
 }
 
-commands.multiFetch = async (options, callback) => {
 
 
-    const promises = Object.keys(options.data).map((key) => request({...options.data[key], apiURL: options.apiURL, token: options.request?.cookies?.PHPSESSID}));
-
-    const responses = await Promise.all(promises);
-
-    const result = {};
-
-    for (let i = 0; i < responses.length; i++) {
-
-        if(responses[i].status == 401) return (await callback({name: "sessionFail", data: responses[i]}));
-
-        result[Object.keys(options.data)[i]] = responses[i];
-    }
-
-    return (await callback({name: options.message, data: result}));
-
-}
-
-export default commands;

@@ -44,7 +44,10 @@ commands.multiFetch = async (options, callback) => {
 
     for (let i = 0; i < responses.length; i++) {
 
-        if(responses[i].status == 401) callback({name: "sessionFail", data: responses[i]});
+        if(responses[i].status == 401) {
+            callback({name: "sessionFail", data: responses[i]});
+            return;
+        }
 
         result[Object.keys(options.data)[i]] = responses[i];
     }

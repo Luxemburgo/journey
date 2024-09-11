@@ -1,0 +1,13 @@
+{
+    "imports": {
+        "@std/fs/exists": "jsr:@std/fs@1.0.3/exists",
+        "@std/fs/walk": "jsr:@std/fs@1.0.3/walk",
+        "@std/path/join": "jsr:@std/path@1.0.4/join",
+        "@std/io/read-all": "jsr:@std/io@0.224.7/read-all",
+        "@std/media-types": "jsr:@std/media-types@1.0.3",
+        "@deno/emit": "jsr:@deno/emit@0.45.0",
+        "@geacko/deno-mimetypes": "jsr:@geacko/mimes@1.0.3",
+        "tailwindcss": "npm:tailwindcss@3.4.10",
+        "postcss": "npm:postcss@8.4.45"
+    }
+}

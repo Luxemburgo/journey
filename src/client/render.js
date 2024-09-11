@@ -1,6 +1,6 @@
-import commands from "./commands.js?v=1";
-import { DOMDiff } from "./DOMDiff.js?v=1";
-import { deepClone } from "../utils.js";
+import { DOMDiff } from "./DOMDiff.js";
+import { deepClone } from "../../tools/utils.js";
+import { navigate } from "../../server/commands.js";
 
 function diffEvents(changes, callback) {
 
@@ -89,13 +89,12 @@ function updateEvents(el, callback) {
                 
                 if(!el.listeners?.filter(e => e.eventName=="click").length) {
 
-                    await commands.navigate(
+                    await navigate(
                         {
                             data: {url: e.currentTarget.href, stateAction: e.currentTarget.getAttribute("data-state")},
                             message: e.currentTarget.getAttribute("data-message") ?? "navigation"
-                        },
-                        callback
-                    );
+                        }
+                    )(callback);
                     
                     window.scrollTo({top: 0, left: 0/*, behavior: "smooth"*/}); 
 
@@ -167,14 +166,11 @@ export async function render(config) {
 
         if(false && document.startViewTransition && config?.message?.name == "navigation" && config.message.data?.stateAction != "replace") {
             
-            document.startViewTransition(() => compareNodes(
-                document.documentElement,
-                newDOM,
-                (node, updates) => {
-                    // console.log(updates);
-                    diffEvents(node, updates, message => render({...config, model: window.journey.model, message}));
-                }
-            ));
+            document.startViewTransition(() => {
+                const changes = DOMDiff(document.documentElement, newDOM, profiling)
+
+                diffEvents(changes, message => render({...config, model: window.journey.model, message}));
+            });
 
         }else{
 
@@ -182,14 +178,14 @@ export async function render(config) {
 
             diffEvents(changes, message => render({...config, model: window.journey.model, message}));
 
-            console.log(profiling.slice(-1)[0].total, profiling, changes);
+            // console.log(profiling.slice(-1)[0].total, profiling, changes);
             
         }
 
-        // if(!window.journey?.DOM) {
-        //     addEvents(message => render({...config, model: window.journey.model, message}))
-        //     window.journey.DOM = true;
-        // }
+        if(!window.journey?.DOMUpdated) {
+            addEvents(message => render({...config, model: window.journey.model, message}));
+            window.journey.DOMUpdated = true;
+        }
     
 
     }
@@ -201,25 +197,15 @@ export async function render(config) {
     }
 
   
-    (state.commands ?? []).filter(c => c.name || typeof c == "function").forEach(command => {
-        
-        if(typeof command == "function") {
+    (state.commands ?? []).forEach(command => {
             
-            command( message => render({...config, message: {...message, command}}) );
+        command( message => render({...config, message}) );
 
-        }else{
-
-            command.controller = state.model.controller;
-
-            commands[command.name](command, message => render({...config, message: {...message, command}}))
-
-        }
-        
     });
 
 
  
-    return {config, state};
+    return state;
 
 }
 

@@ -1,45 +1,45 @@
+import { navigate, navigateBack } from "./commands.js";
 
-export default config => {
+export default (config) => {
     
     const routes = config?.routes ?? {};
     const controllers = config?.controllers ?? {};
     const baseDir = typeof Deno != "undefined" ? 
         ("file:///" + Deno.cwd() + "/" + (config?.routingDir ?? "src/pages")) 
     :
-        (location.protocol + "//" + location.host + "/" + (config?.routingDir ?? "src/pages"));
+        (location.protocol + "//" + location.host + "/" + (config?.routingDir ?? "src/pages"))
+    ;
 
-    const controllerFunction = async (model, message) => {
+    var hash = null;
+
+    return async (model, message) => {
+
+        if(hash != (model?.hash ?? null)) {
+            hash = model.hash;
+            Object.keys(controllers).forEach(key => {
+                if(key!="/root.js" || controllers[key]!==null) delete controllers[key];
+            });
+        }
+
 
         if(!message && !model?.url) {
 
             return {
-                model: {
-                    ...(model ?? {}),
-                    url: true
-                },
-                commands: [{ name: "navigate", message: "navigation" }]
+                model: model ?? {},
+                commands: [navigate({model: model})]
             }
 
         }
 
-        if(message?.name == "back") {
+        if(message?.name == "navigateBack") {
             
             return {
-                // ...controller(model, message),
                 model,
-                commands: [{ name: "navigateBack" }]
+                commands: [navigateBack()]
             }
 
         }
 
-        if(message?.name == "sessionFail") {
-
-            return {
-                model,
-                commands: [{name: "navigate", data: {location: true, url: "/login"}}]
-            }
-
-        }
 
         if(message?.name == "navigation") {
 
@@ -70,7 +70,7 @@ export default config => {
                 }        
             }
 
-            if("document" in window) {
+            if(typeof window != "undefined" && "document" in window) {
                 setTimeout(() => {document.querySelector("[autofocus]")?.focus();}, 0);
             }
 
@@ -86,7 +86,7 @@ export default config => {
                 document.body.inert = true;
             }
 
-            controllers[model.controller] = (await import(baseDir + model.controller)).default;
+            controllers[model.controller] = (await import(baseDir + model.controller + (hash ? "?hash=" + hash : ""))).default;
 
             if(typeof document != "undefined") document.body.inert = false;
 
@@ -94,15 +94,15 @@ export default config => {
     
         const controller = controllers[model?.controller ?? 0] ?? ((model, message)=>({model, html: ""}));
 
-        if(!("/root.js" in controllers)) {
+        if("root" in routes && !(routes.root.route in controllers)) {
             try {
                 
-                const rootController = await import(baseDir + "/root.js");
-                controllers["/root.js"] = rootController.default;
+                const rootController = await import(baseDir + routes.root.route + (hash ? "?hash=" + hash : ""));
+                controllers[routes.root.route] = rootController.default;
                 
             } catch (error) {
                 
-                controllers["/root.js"] = null;
+                controllers[routes.root.route] = null;
 
             }
         }
@@ -118,13 +118,6 @@ export default config => {
 
     };
 
-    controllerFunction.config = {
-        baseDir,
-        routes,
-        controllers
-    };
-
-    return controllerFunction;
 
 }
 

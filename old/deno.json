@@ -1,0 +1,10 @@
+{
+    "exclude": [
+        "./old",
+        "./src",
+        "./tools"
+    ],
+    "workspace": [
+        "./server"
+    ]
+}

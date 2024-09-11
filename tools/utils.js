@@ -99,8 +99,6 @@ export function request(options) {
 
 }
 
-window.req = request;
-
 
 export function urlToObj(url) {
 

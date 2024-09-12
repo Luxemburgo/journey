@@ -129,7 +129,7 @@ export async function render(config) {
         return;
     }
 
-    const state = config?.controller ? 
+    let state = config?.controller ? 
         
         await config.controller(config.model, config.message)
 
@@ -137,6 +137,9 @@ export async function render(config) {
         ({model: config?.model})
     ;
 
+    if(typeof state == "string") state = {html: state};
+
+    state.model = state.model ?? {};
 
     config.model = state?.model;
     

@@ -12,6 +12,10 @@ export default async function render(config) {
 
     // console.log(state.commands?.[0]?.toString());
 
+    if(typeof state == "string") state = {html: state};
+
+    state.model = state.model ?? {};
+
     config.model = state.model;
 
     if(config.renderCallback) {

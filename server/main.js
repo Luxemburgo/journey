@@ -171,7 +171,7 @@ const createHTTPHandler = config => {
                 body = (state?.html ?? "") + /*html*/`
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
-                        <script src="${config?.clientScriptURL || "https://dev.atlas.ar/journey/client/index.js"}" type="module"></script>
+                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@main/js/client.js"}" type="module"></script>
                         <script>
                             window.journey = {
                                 router: {

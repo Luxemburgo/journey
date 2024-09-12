@@ -103,12 +103,20 @@ window.addEventListener("load", async () => {
 
 window.updateHash = (hash) => {
 
-    window.journey.model.hash = hash;
+    if(window.journey.router.disabled) {
+        
+        window.location = window.location;
 
-    render({
-        model: window.journey.model,
-        controller: window.journey.controller
-    });
+    }else{
+
+        window.journey.model.hash = hash;
+
+        render({
+            model: window.journey.model,
+            controller: window.journey.controller
+        });
+
+    }
 
 }
 

@@ -397,9 +397,13 @@ async function render(config) {
     if ((config?.message?.controller ?? config?.model?.controller ?? "") != (config?.model?.controller ?? "")) {
         return;
     }
-    const state = config?.controller ? await config.controller(config.model, config.message) : {
+    let state = config?.controller ? await config.controller(config.model, config.message) : {
         model: config?.model
     };
+    if (typeof state == "string") state = {
+        html: state
+    };
+    state.model = state.model ?? {};
     config.model = state?.model;
     window.journey = {
         ...window.journey ?? {},
@@ -525,11 +529,15 @@ window.addEventListener("load", async ()=>{
     document.querySelector("[autofocus]")?.focus();
 });
 window.updateHash = (hash)=>{
-    window.journey.model.hash = hash;
-    render({
-        model: window.journey.model,
-        controller: window.journey.controller
-    });
+    if (window.journey.router.disabled) {
+        window.location = window.location;
+    } else {
+        window.journey.model.hash = hash;
+        render({
+            model: window.journey.model,
+            controller: window.journey.controller
+        });
+    }
 };
 window.record = ()=>{
     window.stateHistory = [

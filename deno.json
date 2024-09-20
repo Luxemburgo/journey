@@ -1,6 +1,6 @@
 {
     "name": "@luxemburgo/journey",
-    "version": "0.9.0",
+    "version": "0.10.0",
     "exports": {
         "./server": "./server/main.js",
         "./tools": "./tools/main.js"

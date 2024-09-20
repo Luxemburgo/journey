@@ -12,32 +12,26 @@ const createHTTPHandler = config => {
 
     const sockets = [];
 
-    let hotReloadOn = false;
+    let hotReload = false;
     const routes = config?.router?.disabled !== true ? createRoutes(config?.router?.path) : [];
 
-    (config.fsWatchers ?? []).forEach(fsWatcher => {
+    (config?.fsWatchers ?? []).forEach(fsWatcher => {
 
-        if(fsWatcher.hotReload) hotReloadOn = true;
+        if(fsWatcher.hotReload) hotReload = true;
 
         (async () => {
     
             let timeOut = null;
 
-            const watcher = Deno.watchFs(fsWatcher.path ?? "./");
-        
-            // console.log("Observando cambios en el sistema de archivos en " + fsWatcher.path);
+            const watcher = Deno.watchFs(fsWatcher.path || "./");
         
             for await (const event of watcher) {
-                // console.log("Tipo de evento:", event.kind);
-                // console.log("Archivos afectados:", event.paths);
         
-                if (event.kind === "modify") {
-                        
-                    if(timeOut) clearTimeout(timeOut);
+                if(timeOut) clearTimeout(timeOut);
 
-                    timeOut = setTimeout(() => {
+                timeOut = setTimeout(() => {
 
-                        // console.log("Un archivo ha sido modificado", event.paths);
+                    if (event.kind === "modify") {
 
                         if(fsWatcher.hotReload) {
                             sockets.forEach(socket => {
@@ -45,18 +39,24 @@ const createHTTPHandler = config => {
                             });
                         }
     
-                        if(fsWatcher.onModify) fsWatcher.onModify(event);
-    
-                    }, 200);
-                   
-                } else if (event.kind === "create") {
-                    // console.log("Un archivo ha sido creado");
-                } else if (event.kind === "remove") {
-                    // console.log("Un archivo ha sido eliminado");
-                }
-        
+                        if(typeof fsWatcher.onModify == "function") fsWatcher.onModify(event);
+                    
+                    } else if (event.kind === "create") {
+
+                        if(typeof fsWatcher.onCreate == "function") fsWatcher.onCreate(event);
+
+                    } else if (event.kind === "remove") {
+
+                        if(typeof fsWatcher.onRemove == "function") fsWatcher.onRemove(event);
+
+                    }
+            
+                }, 200);
+
             }
+
         })()
+
     });
 
 
@@ -118,7 +118,7 @@ const createHTTPHandler = config => {
         
         if (config?.router?.disabled !== true) {
             config.controller = createRouterController({ routes, routingDir: config?.router?.path });
-        } else if (!config.controller) {
+        } else if (config && !("controller" in config)) {
             config.controller = () => ({ html: "Error: no controller defined" });
         }
     
@@ -138,7 +138,7 @@ const createHTTPHandler = config => {
     
     const defaultServer = async (request) => {
         
-        if (hotReloadOn && request.headers.get("upgrade") === "websocket") {
+        if (hotReload && request.headers.get("upgrade") === "websocket") {
             return handleWebSocket(request);
         }
     
@@ -171,7 +171,7 @@ const createHTTPHandler = config => {
                 body = (state?.html ?? "") + /*html*/`
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
-                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@main/js/client.js"}" type="module"></script>
+                        <script src="${config?.clientScriptURL || "https://cdn.statically.io/gh/Luxemburgo/journey/main/js/client.js?v=0.10.0"}" type="module"></script>
                         <script>
                             window.journey = {
                                 router: {
@@ -180,7 +180,7 @@ const createHTTPHandler = config => {
                                     path: ${config?.router?.path ? `"${config?.router?.path}"` : "null"},
                                 },
                                 model: ${JSON.stringify(state.model)},
-                                hotReload: ${hotReloadOn},
+                                hotReload: ${hotReload},
                                 ${config?.router?.disabled === true && config?.controller ? `controller: ${config?.controller?.toString()},` : ""}
                                 ${config?.renderCallback ? `renderCallback: ${config.renderCallback.toString()},` : ""}
                             };
@@ -202,23 +202,28 @@ const createHTTPHandler = config => {
             },
         });
     
-        if (file && config?.cacheControl?.(request.URL)) {
-            response.headers.set("Cache-Control", config.cacheControl(request.URL));
+        if (file) {
+
+            response.headers.set(
+                "Cache-Control",
+                (typeof config?.cacheControl == "function" ? config.cacheControl(request.URL) : config?.cacheControl) || "public, max-age=360000"
+            );
+
         }
     
         return response;
     };
     
 
-    return async clientRequest => {
+    return async HTTPRequest => {
         
-        if(config?.HTTPHandler) {
+        if(typeof config?.HTTPHandler == "function") {
 
-            return config.HTTPHandler(clientRequest, defaultServer);
+            return config.HTTPHandler(HTTPRequest, defaultServer);
             
         }else{
 
-            return defaultServer(clientRequest);
+            return defaultServer(HTTPRequest);
 
         }
 

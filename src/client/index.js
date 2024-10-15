@@ -1,5 +1,5 @@
-import { urlToObj, deepClone } from "../../tools/utils.js"
-import createRouterController from "../../server/createRouterController.js";
+import { urlToObj, deepClone } from "../common/utils.js"
+import createRouterController from "../common/createRouterController.js";
 import { render } from "./render.js";
 
 window.onpopstate = e => {

@@ -136,3 +136,27 @@ export function responseToObj(response) {
 
 }
 
+  
+export function escapeHTML(string, insertLinks = false) {
+    const result = (string ?? "").toString()
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // const result = (string ?? "").toString()
+    // .replace(/&amp;/g, '&')
+    // .replace(/&lt;/g, '<')
+    // .replace(/&gt;/g, '>')
+    // .replace(/&quot;/g, '"')
+    // .replace(/&#039;/g, "'")
+    // .replace(/&/g, '&amp;')
+    // .replace(/</g, '&lt;')
+    // .replace(/>/g, '&gt;')
+    // .replace(/"/g, '&quot;')
+    // .replace(/'/g, '&#039;');
+
+    return (insertLinks ? replaceLinksWithHTML(result) : result).replace(/\n/g, '<br>');
+
+}

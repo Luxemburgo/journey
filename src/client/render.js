@@ -1,6 +1,6 @@
+// import { deepClone } from "../../tools/utils.js";
 import { DOMDiff } from "./DOMDiff.js";
-import { deepClone } from "../../tools/utils.js";
-import { navigate } from "../../server/commands.js";
+import { navigate } from "../common/commands.js";
 
 function diffEvents(changes, callback) {
 
@@ -119,7 +119,7 @@ function addEvents(callback) {
 }
 
 
-
+const domParser = new DOMParser();
 
 export async function render(config) {
 
@@ -149,15 +149,55 @@ export async function render(config) {
     if(state.html) {
         
 
-        if(window.renderCallback) {
+        // if(window.renderCallback) {
 
-            state.html = window.renderCallback(state.model, state.html ?? "");
+        //     state.html = window.renderCallback(state.model, state.html ?? "");
 
-        }
+        // }
 
         // state.html = state.html.replace(/<!--[\s\S]*?-->/g, ''); //.replace(/>\s+/g, '>').replace(/\s+</g, '<').replace(/\n/g, '');
 
-        const newDOM = new DOMParser().parseFromString(state.html, "text/html").documentElement;
+        let time = performance.now();
+
+        if(state.html?.tagName) {
+
+            state.html = state.html.outerHTML;
+
+            // if(state.html.tagName.toLowerCase()=="body") {
+
+            //     const htmlElement = document.createElement("HTML");
+            //     htmlElement.append(document.createElement("HEAD"));
+            //     htmlElement.append(state.html);
+            //     state.html = htmlElement;
+                
+            // }else if(state.html.tagName.toLowerCase()=="head") {
+
+            //     const htmlElement = document.createElement("HTML");
+            //     htmlElement.append(state.html);
+            //     htmlElement.append(document.createElement("BODY"));
+            //     state.html = htmlElement;
+
+            // }else{
+
+            //     const htmlElement = document.createElement("HTML");
+            //     htmlElement.append(document.createElement("HEAD"));
+            //     htmlElement.append(document.createElement("BODY"));
+            //     htmlElement.lastElementChild.append(state.html);
+            //     state.html = htmlElement;
+
+            // }
+
+            // console.log(state.html);
+
+        }
+
+        state.html = /*html*/`<link id=tailwind" rel="stylesheet" href="/css/output.css?hash=${state?.model?.hash ?? ""}">` + state.html;
+
+        const newDOM = domParser.parseFromString(state.html, "text/html").documentElement;
+
+        console.log("Dom parser", Math.round(performance.now() - time));
+
+        // const newDOM = state.html?.outerHTML ? state.html : new DOMParser().parseFromString(state.html, "text/html").documentElement;
 
         profiling.push({
             duration: Math.round(performance.now() - profiling.slice(-1)[0].time),
@@ -195,9 +235,9 @@ export async function render(config) {
 
 
     
-    if("stateHistory" in window && !window.play) {
-        window.stateHistory.push({model: deepClone(state.model), time: performance.now()});
-    }
+    // if("stateHistory" in window && !window.play) {
+    //     window.stateHistory.push({model: deepClone(state.model), time: performance.now()});
+    // }
 
   
     (state.commands ?? []).forEach(command => {

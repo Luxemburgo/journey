@@ -1,15 +1,16 @@
-import {urlToObj} from "../tools/utils.js"
+import {urlToObj} from "./utils.js"
 
 export const navigate = (options) => {
 
     return async callback => {
+
+        console.log(options?.model?.request);
 
         const url = urlToObj(new URL(
             options?.data?.url ?? "",
             new URL(options?.model?.request?.url ?? window.location)
         ));
 
-        // console.log(url);
 
         if(options?.data?.redirect) {
             

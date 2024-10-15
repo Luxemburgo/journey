@@ -1,9 +1,8 @@
-import { existsSync } from "jsr:@std/fs@1.0.3/exists";
-import { walkSync } from "jsr:@std/fs@1.0.3/walk";
+import { existsSync, walkSync } from "@std/fs";
 
 export default (routingDir) => {
 
-    routingDir = (routingDir ?? "./src/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
+    routingDir = (routingDir ?? "./lib/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
 
     const routes = {};
 

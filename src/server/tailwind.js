@@ -1,5 +1,5 @@
-import postcss from "npm:postcss@8.4.45";
-import tailwindcss from "npm:tailwindcss@3.4.10";
+import postcss from "postcss";
+import tailwindcss from "tailwindcss";
 
 export async function buildTailwind(config, input) {
 

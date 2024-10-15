@@ -1,16 +1,22 @@
 {
     "name": "@luxemburgo/journey",
-    "version": "0.10.0",
+    "version": "0.15.3",
     "exports": {
-        "./server": "./server/main.js",
-        "./tools": "./tools/main.js"
+        ".": "./src/server/mod.ts",
+        "./types": "./src/server/types/JourneyConfig.ts"
     },
     "license": "MIT",
     "publish": {
-        "exclude": [
-            "old",
-            "src",
-            "js"
-        ]
+        "exclude": []
+    },
+    "imports": {
+        "@std/fs": "jsr:@std/fs@1.0.3",
+        "@std/path": "jsr:@std/path@1.0.4",
+        "@std/io": "jsr:@std/io@0.224.7",
+        "@std/media-types": "jsr:@std/media-types@1.0.3",
+        "@deno/emit": "jsr:@deno/emit@0.45.0",
+        "@geacko/deno-mimetypes": "jsr:@geacko/mimes@1.0.3",
+        "tailwindcss": "npm:tailwindcss@3.4.10",
+        "postcss": "npm:postcss@8.4.45"
     }
 }

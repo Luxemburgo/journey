@@ -1,6 +1,6 @@
-import { bundle } from "jsr:@deno/emit@0.45.0";
-import { join } from 'jsr:@std/path@1.0.4/join';
-import createRoutes from "../server/createRoutes.js";
+import { bundle } from "@deno/emit";
+import { join } from '@std/path';
+import createRoutes from "./createRoutes.js";
 // import { parse } from "https://deno.land/std@0.110.0/flags/mod.ts";
 
 

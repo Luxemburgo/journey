@@ -7,7 +7,7 @@
     },
     "license": "MIT",
     "publish": {
-        "exclude": []
+        "exclude": ["lib"]
     },
     "imports": {
         "@std/fs": "jsr:@std/fs@1.0.3",

@@ -147,7 +147,6 @@ export async function render(config) {
 
 
     if(state.html) {
-        
 
         // if(window.renderCallback) {
 
@@ -157,45 +156,14 @@ export async function render(config) {
 
         // state.html = state.html.replace(/<!--[\s\S]*?-->/g, ''); //.replace(/>\s+/g, '>').replace(/\s+</g, '<').replace(/\n/g, '');
 
-        let time = performance.now();
+        // let time = performance.now();
 
-        if(state.html?.tagName) {
-
-            state.html = state.html.outerHTML;
-
-            // if(state.html.tagName.toLowerCase()=="body") {
-
-            //     const htmlElement = document.createElement("HTML");
-            //     htmlElement.append(document.createElement("HEAD"));
-            //     htmlElement.append(state.html);
-            //     state.html = htmlElement;
-                
-            // }else if(state.html.tagName.toLowerCase()=="head") {
-
-            //     const htmlElement = document.createElement("HTML");
-            //     htmlElement.append(state.html);
-            //     htmlElement.append(document.createElement("BODY"));
-            //     state.html = htmlElement;
-
-            // }else{
-
-            //     const htmlElement = document.createElement("HTML");
-            //     htmlElement.append(document.createElement("HEAD"));
-            //     htmlElement.append(document.createElement("BODY"));
-            //     htmlElement.lastElementChild.append(state.html);
-            //     state.html = htmlElement;
-
-            // }
-
-            // console.log(state.html);
-
-        }
-
-        state.html = /*html*/`<link id=tailwind" rel="stylesheet" href="/css/output.css?hash=${state?.model?.hash ?? ""}">` + state.html;
+        state.html = /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${state?.model?.hash || window.journey.tailwindHash}">` 
+        + (state.html.outerHTML ?? state.html);
 
         const newDOM = domParser.parseFromString(state.html, "text/html").documentElement;
 
-        console.log("Dom parser", Math.round(performance.now() - time));
+        // console.log("Dom parser", Math.round(performance.now() - time));
 
         // const newDOM = state.html?.outerHTML ? state.html : new DOMParser().parseFromString(state.html, "text/html").documentElement;
 
@@ -253,4 +221,4 @@ export async function render(config) {
 }
 
 // window.stateHistory = [];
-window.render = render;
+// window.render = render;

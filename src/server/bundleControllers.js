@@ -29,7 +29,7 @@ export default async ({routingDir, imports, outputFile}) => {
 
     for (const key in routes) {
         const routePath = routes[key].route;
-        const importPath = `./src/pages${routePath}`;
+        const importPath = `./lib/pages${routePath}`;
         const importName = routePath.replace(/[^a-zA-Z0-9]/g, '_');
         fileContent += `import ${importName} from '${importPath}';\n`;
     }

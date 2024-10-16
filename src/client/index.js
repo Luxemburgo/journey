@@ -77,7 +77,7 @@ window.addEventListener("load", async () => {
         socket.onmessage = e => {
             // console.log(e.data);
             if(e.data =="Update!") {
-                window.updateHash(Math.round(Math.random()*10000));
+                window.updateHash(Math.round(Math.random()*100000000).toString(16));
             }
         };
 

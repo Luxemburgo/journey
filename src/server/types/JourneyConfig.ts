@@ -12,4 +12,5 @@ export interface JourneyConfig {
     assetsDirs?: string[];
     cacheControl?: (url: URL) => string | string;
     serverConfig?: Deno.ListenOptions;
+    production?: boolean;
 }

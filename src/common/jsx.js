@@ -21,7 +21,12 @@ export function createElement(type, props, ...children) {
     for (const [key, value] of Object.entries(props ?? {})) {
         element.setAttribute(key, value);
     }
-    element.append(...getChildren(children));
+
+    if (props?.dangerouslySetInnerHTML) {
+        element.innerHTML = props.dangerouslySetInnerHTML.html;
+    } else {
+        element.append(...getChildren(children));
+    }
     return element;
 }
 function getChildren(children) {

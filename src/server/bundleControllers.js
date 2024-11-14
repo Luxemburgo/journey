@@ -34,7 +34,7 @@ export default async ({routingDir, imports, outputFile}) => {
         fileContent += `import ${importName} from '${importPath}';\n`;
     }
 
-    fileContent += '\nconst routes = {\n';
+    fileContent += '\export const controllers = {\n';
 
     for (const key in routes) {
         const routePath = routes[key].route;
@@ -42,7 +42,7 @@ export default async ({routingDir, imports, outputFile}) => {
         fileContent += `  '${routes[key].route}': ${importName},\n`;
     }
 
-    fileContent += '};\n\nwindow.journey.controllers = routes;\n';
+    fileContent += '};\n\nif(typeof window != "undefined") window.journey.controllers = controllers;\n';
 
     const routesFile = join(Deno.cwd(), 'generatedRoutes.js');
     const encoder = new TextEncoder();

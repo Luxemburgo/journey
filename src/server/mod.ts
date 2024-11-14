@@ -38,6 +38,8 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
     const bundleHash = await fnv1aFromFile("public/main.js");
     
+    // const controllers = (await import("file:///" + Deno.cwd() + "/public/main.js")).controllers;
+    
 
     const sockets: WebSocket[] = [];
 
@@ -145,7 +147,11 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
         if (config?.router?.disabled !== true) {
             
-            result.controller = createRouterController({ routes: result.routes, routingDir: config?.router?.path });
+            result.controller = createRouterController({
+                routes: result.routes,
+                routingDir: config?.router?.path,
+                // controllers
+            });
 
         } else if(!("controller" in config)) {
             

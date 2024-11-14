@@ -1,6 +1,6 @@
 {
     "name": "@luxemburgo/journey",
-    "version": "0.15.3",
+    "version": "0.15.5",
     "exports": {
         ".": "./src/server/mod.ts",
         "./types": "./src/server/types/JourneyConfig.ts"

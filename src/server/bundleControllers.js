@@ -1,5 +1,6 @@
 import { bundle } from "@deno/emit";
-import { join } from '@std/path';
+import { join, dirname } from '@std/path';
+import { ensureDir } from "@std/fs";
 import createRoutes from "./createRoutes.js";
 // import { parse } from "https://deno.land/std@0.110.0/flags/mod.ts";
 
@@ -56,6 +57,9 @@ export default async ({routingDir, imports, outputFile}) => {
 
     const mainOutputFile = join(Deno.cwd(), outputFile);
     const mainData = encoder.encode(code);
+
+    await ensureDir(dirname(mainOutputFile));
+
     Deno.writeFileSync(mainOutputFile, mainData);
 
     // console.log('Archivo main.js generado exitosamente.');

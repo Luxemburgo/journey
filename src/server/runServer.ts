@@ -10,11 +10,6 @@ import createRoutes from "./createRoutes.js";
 import createRouterController from '../common/createRouterController.js';
 import render from "./render.js";
 
-async function lazyLoad(path: string) {
-
-    return await import(path);
-}
-
 export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
     await showLoadingWhileTask(transpileDirectory("src"), "Building...");
@@ -100,8 +95,10 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
     async function buildTailwindFactory(): Promise<() => Promise<void>> {
 
         try {
+
+            const configImportPath = "file:///" + Deno.cwd() + "/tailwind.config.js";
         
-            const tailwindConfig = (await import("file:///" + Deno.cwd() + "/tailwind.config.js")).default;
+            const tailwindConfig = (await import(configImportPath)).default;
     
             let inputCSS = `
             @tailwind base;
@@ -113,7 +110,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 
                 inputCSS = Deno.readTextFileSync("src/input.css");
     
-            }catch{}
+            }catch {}
 
             const importPath = "./tailwind.js";
 
@@ -131,7 +128,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
             return buildFn;
 
-        }catch{}
+        }catch {}
 
         return async () => {};
     }
@@ -271,7 +268,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                     ((typeof state?.html == "object" ? state?.html?.outerHTML : null) ?? state?.html ?? "") + /*html*/`                    
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
-                        <script src="${config?.clientScriptURL || "https://cdn.statically.io/gh/Luxemburgo/journey/master/src/client/index.js"}" type="module"></script>
+                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@main/src/client/index.js"}" type="module"></script>
                         <script>
                             window.journey = {
                                 router: {

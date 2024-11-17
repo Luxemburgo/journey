@@ -1,0 +1,10 @@
+{
+  "name": "@luxemburgo/bills",
+  "version": "0.16.0",
+  "exports": "./mod.ts",
+  "tasks": {
+    "prod": "deno run -A --no-lock mod.ts",
+    "dev": "deno run -A --watch-hmr --no-lock --import-map http://nginx/journey/deno.json mod.dev.ts"
+  },
+  "license": "MIT"
+}

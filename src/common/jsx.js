@@ -23,11 +23,26 @@ export function createElement(type, props, ...children) {
 
     }
 
+    if (!type) {
+        const fragment = document.createDocumentFragment();
+        fragment.append(...getChildren(children));
+        console.log(fragment);
+        return fragment;
+    }
+
     const element = document.createElement(type);
 
     for (const [key, value] of Object.entries(props ?? {})) {
 
         if(key === "dangerouslySetInnerHTML" || [undefined, null, false].includes(value)) continue;
+
+        if(key == "style" && typeof value === "object") {
+
+            element.style.cssText = cssObjectToString(value);
+
+            continue;
+
+        }
 
         element.setAttribute(key, value === true ? "" : value);
 
@@ -46,6 +61,12 @@ export function createElement(type, props, ...children) {
     return element;
 }
 
+function cssObjectToString(style) {
+
+    return Object.entries(style).map(([key, value]) => `${key}: ${value}`).join(";");
+
+}
+
 function getChildren(children) {
     
     if (typeof children === "undefined" || children === null) return [];
@@ -58,7 +79,7 @@ function createNode(child) {
     
     if (typeof child === "undefined" || child === null) return null;
     
-    if (child.outerHTML) return child;
+    if (child.outerHTML || child.nodeType === 11) return child;
     
     if (typeof child === "object") return document.createTextNode(JSON.stringify(child, null, 4));
     

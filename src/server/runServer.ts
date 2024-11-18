@@ -365,7 +365,7 @@ const parseCookies = (headers: Headers): {[key: string]: string} => {
 
         for (const cookie of cookieList) {
             const [name, value] = cookie.split("=");
-            cookies[name.trim()] = value.trim();
+            cookies[(name ?? 0).trim()] = (value ?? "").trim();
         }
     }
 

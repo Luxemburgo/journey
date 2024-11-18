@@ -32,15 +32,13 @@ export function createElement(type, props, ...children) {
 
     const element = document.createElement(type);
 
-    for (const [key, value] of Object.entries(props ?? {})) {
+    for (let [key, value] of Object.entries(props ?? {})) {
 
         if(key === "dangerouslySetInnerHTML" || [undefined, null, false].includes(value)) continue;
 
         if(key == "style" && typeof value === "object") {
 
-            element.style.cssText = cssObjectToString(value);
-
-            continue;
+            value = cssObjectToString(value);
 
         }
 

@@ -26,7 +26,6 @@ export function createElement(type, props, ...children) {
     if (!type) {
         const fragment = document.createDocumentFragment();
         fragment.append(...getChildren(children));
-        console.log(fragment);
         return fragment;
     }
 

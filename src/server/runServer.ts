@@ -268,7 +268,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                     ((typeof state?.html == "object" ? state?.html?.outerHTML : null) ?? state?.html ?? "") + /*html*/`                    
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
-                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@main/src/client/index.js"}" type="module"></script>
+                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey/src/client/index.js"}" type="module"></script>
                         <script>
                             window.journey = {
                                 router: {

@@ -12,17 +12,17 @@ export default (config) => {
 
     var hash = null;
 
-    return async (model, message) => {
+    return async (model, message, context) => {
 
-        if(hash != (model?.hash ?? null)) {
-            hash = model.hash;
+        if(hash != (context?.hash ?? null)) {
+            hash = context?.hash;
             Object.keys(controllers).forEach(key => {
                 if(key!="/root.js" || controllers[key]!==null) delete controllers[key];
             });
         }
 
 
-        if(!message && !model?.url) {
+        if(!message && !context?.url) {
 
             return {
                 model: model ?? {},
@@ -43,9 +43,9 @@ export default (config) => {
 
         if(message?.name == "navigation") {
 
-            model.url = message.data;
+            context.url = message.data;
             
-            model.controller = null;
+            context.controller = null;
 
             // if(model.url.hash) document.querySelector(model.url.hash)?.scrollIntoView();
 
@@ -63,7 +63,7 @@ export default (config) => {
                     
                     message.data.args = Object.fromEntries(routes[route].args.map((i, idx) => [i, result[idx]]));
 
-                    model.controller = routes[route].route;
+                    context.controller = routes[route].route;
                     
                     break;
 
@@ -75,29 +75,36 @@ export default (config) => {
             }
 
 
-            if(!model.controller) throw new Error("Not found");
+            if(!context.controller) throw new Error("Not found");
 
         }
 
-        if(model?.controller && !controllers[model.controller]) {
+        if(context?.controller && !controllers[context.controller]) {
 
             if(typeof document != "undefined") {
                 document.body.classList.add("animate-pulse");
                 document.body.inert = true;
             }
 
-            controllers[model.controller] = (await import(baseDir + model.controller + (hash ? "?hash=" + hash : ""))).default;
+            const module = (await import(baseDir + context.controller + (hash ? "?hash=" + hash : "")));
+
+            const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
+
+            const messageControllerName = "on" + capitalizeFirstLetter(message?.name ?? "unknown");
+
+            controllers[context.controller] = module[messageControllerName] ?? module.default;
 
             if(typeof document != "undefined") document.body.inert = false;
 
         }
     
-        const controller = controllers[model?.controller ?? 0] ?? ((model, message)=>({model, html: ""}));
+        const controller = controllers[context.controller ?? 0] ?? ((model, message)=>({model, html: ""}));
 
         if("root" in routes && !(routes.root.route in controllers)) {
             try {
                 
                 const rootController = await import(baseDir + routes.root.route + (hash ? "?hash=" + hash : ""));
+                                
                 controllers[routes.root.route] = rootController.default;
                 
             } catch (error) {
@@ -110,11 +117,11 @@ export default (config) => {
 
         if(controllers["/root.js"]) {
 
-            return controllers["/root.js"](model, message, controller);
+            return controllers["/root.js"](model, message, context, controller);
         
         }
 
-        return controller(model, message);
+        return controller(model, message, context);
 
     };
 

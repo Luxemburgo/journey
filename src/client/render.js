@@ -143,7 +143,11 @@ export async function render(config) {
 
     config.model = state?.model;
     
-    window.journey = {...(window.journey ?? {}), model: config.model};
+    window.journey = {
+        ...(window.journey ?? {}),
+        model: config.model,
+        context: config.context
+    };
 
 
     if(state.html) {

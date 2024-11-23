@@ -135,7 +135,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
     function setupRouting(): {controller?: Controller, routes?: object} {
 
-     const result: {
+        const result: {
             controller?: Controller;
             routes?: object;
         } = {
@@ -202,7 +202,8 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
     
         const state = await render({
             model: model,
-            controller: controller
+            controller: controller,
+            context: config?.context
         });
 
         delete state?.model?.request;
@@ -277,6 +278,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                                     path: ${config?.router?.path ? `"${config?.router?.path}"` : "null"},
                                 },
                                 model: ${JSON.stringify(state.model)},
+                                context: ${JSON.stringify(config?.context)},
                                 tailwindHash: "${tailwindHash}",
                                 hotReload: ${hotReload},
                                 ${config?.router?.disabled === true && controller ? `controller: ${controller.toString()},` : ""}

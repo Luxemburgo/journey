@@ -1,4 +1,4 @@
-import { urlToObj, deepClone } from "../common/utils.js"
+import { urlToObj } from "../common/utils.js"
 import createRouterController from "../common/createRouterController.js";
 import { render } from "./render.js";
 
@@ -7,7 +7,8 @@ window.onpopstate = e => {
     render({
         model: window.journey.model,
         message: {name: "navigation", isPopState: true, data: urlToObj(new URL(location))},
-        controller: window.journey.controller
+        controller: window.journey.controller,
+        context: window.journey.context ?? {}
     });
 
 }
@@ -93,7 +94,8 @@ window.addEventListener("load", async () => {
 
     await render({
         model: window.journey.model,
-        controller: window.journey.controller
+        controller: window.journey.controller,
+        context: window.journey.context ?? {}
     });
 
     document.querySelector("[autofocus]")?.focus();
@@ -113,13 +115,15 @@ window.updateHash = (hash) => {
 
         render({
             model: window.journey.model,
-            controller: window.journey.controller
+            controller: window.journey.controller,
+            context: window.journey.context ?? {}
         });
 
     }
 
 }
 
+/*
 window.record = () => {
 
     window.stateHistory = [{
@@ -228,3 +232,4 @@ window.playRecording = function() {
     window.fakeCursor.style.display = 'none';
     }, recording[recording.length - 1].time - startTime);
 }
+*/

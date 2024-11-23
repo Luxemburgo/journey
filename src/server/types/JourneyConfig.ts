@@ -8,9 +8,22 @@ export interface JourneyConfig {
         disabled?: boolean;
     };
     clientScriptURL?: string;
-    model?: {[key: string]: any;};
+    model?: {[key: string]: any};
+    context?: Context;
     assetsDirs?: string[];
     cacheControl?: (url: URL) => string | string;
     serverConfig?: Deno.ListenOptions;
     production?: boolean;
+}
+
+export interface Context {
+    hash?: never;
+    url?: never;
+    controller?: never;
+    request?: never;
+}
+
+export interface Page {
+    title: string;
+    docTitle?: string;
 }

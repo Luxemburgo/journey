@@ -4,7 +4,7 @@ export default async function render(config) {
 
     let state = config.controller ? 
         
-        await config.controller(config.model, config.message)
+        await config.controller(config.model, config.message, config.context)
 
     :
         ({model: config?.model})

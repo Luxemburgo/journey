@@ -1,6 +1,6 @@
 {
     "name": "@luxemburgo/journey",
-    "version": "0.22.0",
+    "version": "0.23.0",
     "exports": {
         ".": "./src/server/runServer.ts",
         "./types": "./src/server/types/JourneyConfig.ts"
@@ -9,6 +9,9 @@
     "publish": {
         "exclude": ["lib"]
     },
+    "ignore": [
+        "lib"
+    ],
     "imports": {
         "@std/fs": "jsr:@std/fs@1.0.3",
         "@std/path": "jsr:@std/path@1.0.4",

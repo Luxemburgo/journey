@@ -6,14 +6,14 @@ export const navigate = (options) => {
 
         const url = urlToObj(new URL(
             options?.data?.url ?? "",
-            new URL(options?.model?.request?.url ?? window.location)
+            new URL(options?.context?.request?.url ?? window.location)
         ));
 
 
         if(options?.data?.redirect) {
             
-            if(options?.model?.request) {
-                options.model.redirect = url.href;
+            if(options?.context?.request) {
+                options.context.redirect = url.href;
             }else{
                 window.location = url.href;
             }
@@ -32,10 +32,10 @@ export const navigate = (options) => {
         }
 
         return (await callback({
-            name: options.message ?? "navigation",
+            name: options?.message ?? "navigation",
             data: {
                 ...url,
-                stateAction: options.data?.stateAction
+                stateAction: options?.data?.stateAction
             }
         }));
 

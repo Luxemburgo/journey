@@ -198,12 +198,12 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
         return null;
     };
 
-    async function getAppState (model: object): Promise<{model?: {[key: string]: any;}, html?: {[key: string]: any;} | string} | Response> {
+    async function getAppState (context: object): Promise<{model?: {[key: string]: any;}, html?: {[key: string]: any;} | string} | Response> {
     
         const state = await render({
-            model: model,
+            model: (config?.model ?? {}),
             controller: controller,
-            context: config?.context
+            context: context
         });
 
         delete state?.model?.request;
@@ -250,7 +250,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 const hash: string | undefined = config.production ? undefined : Math.round(Math.random()*100000000).toString(16);
 
                 const state = await getAppState({
-                    ...(config?.model ?? {}),
+                    ...(config?.context ?? {}),
                     request: extendedRequest,
                     hash: hash
                 });

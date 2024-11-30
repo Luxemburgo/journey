@@ -1,6 +1,6 @@
 export default async function render(config) {
 
-    // console.log(config.message);
+    // console.log(config.context);
 
     let state = config.controller ? 
         

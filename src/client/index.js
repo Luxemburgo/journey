@@ -111,7 +111,7 @@ window.updateHash = (hash) => {
 
     }else{
 
-        window.journey.model.hash = hash;
+        window.journey.context.hash = hash;
 
         render({
             model: window.journey.model,

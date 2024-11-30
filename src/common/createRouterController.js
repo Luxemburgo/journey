@@ -1,4 +1,5 @@
 import { navigate, navigateBack } from "./commands.js";
+import injector from "./injector.js";
 
 export default (config) => {
     
@@ -26,7 +27,7 @@ export default (config) => {
 
             return {
                 model: model ?? {},
-                commands: [navigate({model: model})]
+                commands: [navigate({context, model})]
             }
 
         }
@@ -88,43 +89,67 @@ export default (config) => {
 
             const module = (await import(baseDir + context.controller + (hash ? "?hash=" + hash : "")));
 
-            const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
+            // const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
 
-            const messageControllerName = "on" + capitalizeFirstLetter(message?.name ?? "unknown");
+            // const messageControllerName = "on" + capitalizeFirstLetter(message?.name ?? "unknown");
 
-            controllers[context.controller] = module[messageControllerName] ?? module.default;
+            controllers[context.controller] = module; //module[messageControllerName] ?? module.default;
 
             if(typeof document != "undefined") document.body.inert = false;
 
         }
-    
-        const controller = controllers[context.controller ?? 0] ?? ((model, message)=>({model, html: ""}));
 
-        if("root" in routes && !(routes.root.route in controllers)) {
-            try {
-                
-                const rootController = await import(baseDir + routes.root.route + (hash ? "?hash=" + hash : ""));
-                                
-                controllers[routes.root.route] = rootController.default;
-                
-            } catch (error) {
-                
-                controllers[routes.root.route] = null;
 
+        const messageControllerName = "on" + capitalizeFirstLetter(message?.name ?? "unknown");
+
+        try {
+
+            // const controller = injector.inject(controllers[context.controller][messageControllerName] ?? controllers[context.controller].default);
+            const controller = controllers[context.controller][messageControllerName] ?? controllers[context.controller].default;
+
+            if("root" in routes && !(routes.root.route in controllers)) {
+                try {
+                    
+                    controllers[routes.root.route] = await import(baseDir + routes.root.route + (hash ? "?hash=" + hash : ""));
+                    
+                } catch (error) {
+                    
+                    controllers[routes.root.route] = null;
+
+                }
             }
+
+
+            if(controllers[routes.root?.route ?? 0]) {
+
+                try {
+                    
+                    // return injector.inject(controllers[routes.root.route].default)(model, message, context, controller);
+                    return controllers[routes.root.route].default(model, message, context, injector.services, controller);
+
+                } catch (error) {
+                    
+                    console.error(`An error has occurred in root controller: ${error.message}`);
+                    throw error;                    
+
+                }
+            
+            }
+
+            // return controller(model, message, context);
+
+            return controller(model, message, context, injector.services);
+
+        } catch (error) {
+
+            console.error(`An error has occurred in controller ${context.controller}: ${error.message}`);
+            throw error;
+
         }
-
-
-        if(controllers["/root.js"]) {
-
-            return controllers["/root.js"](model, message, context, controller);
-        
-        }
-
-        return controller(model, message, context);
 
     };
 
 
 }
 
+const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);

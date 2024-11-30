@@ -23,7 +23,3 @@ export interface Context {
     request?: never;
 }
 
-export interface Page {
-    title: string;
-    docTitle?: string;
-}

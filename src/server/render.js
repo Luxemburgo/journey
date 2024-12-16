@@ -29,7 +29,9 @@ export default async function render(config) {
 
     for(const command of (state.commands ?? [])) {
         
-        state = await command( message => render({...config, message}) );
+        const commandResult = await command( message => render({...config, message}) );
+
+        if(commandResult) state = commandResult;
 
     };
 

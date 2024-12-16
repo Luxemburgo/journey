@@ -162,7 +162,7 @@ export async function render(config) {
 
         // let time = performance.now();
 
-        state.html = /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${state?.model?.hash || window.journey.tailwindHash}">` 
+        state.html = /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${config.context?.hash || window.journey.tailwindHash}">` 
         + (state.html.outerHTML ?? state.html);
 
         const newDOM = domParser.parseFromString(state.html, "text/html").documentElement;

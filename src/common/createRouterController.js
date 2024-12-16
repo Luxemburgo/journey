@@ -1,5 +1,4 @@
 import { navigate, navigateBack } from "./commands.js";
-import injector from "./injector.js";
 
 export default (config) => {
     
@@ -125,7 +124,7 @@ export default (config) => {
                 try {
                     
                     // return injector.inject(controllers[routes.root.route].default)(model, message, context, controller);
-                    return controllers[routes.root.route].default(model, message, context, injector.services, controller);
+                    return controllers[routes.root.route].default(model, message, context, controller);
 
                 } catch (error) {
                     
@@ -138,7 +137,7 @@ export default (config) => {
 
             // return controller(model, message, context);
 
-            return controller(model, message, context, injector.services);
+            return controller(model, message, context);
 
         } catch (error) {
 

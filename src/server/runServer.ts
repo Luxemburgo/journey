@@ -4,8 +4,8 @@ import { existsSync } from "@std/fs";
 import { contentType } from "@std/media-types";
 import { transpileDirectory, transpileFile } from "./transpile.ts";
 import bundleControlles from "./bundleControllers.js";
-import type { JourneyConfig } from "./types/JourneyConfig.ts";
-import type { Controller } from "./types/Controller.ts";
+import type { JourneyConfig } from "../types/JourneyConfig.ts";
+import type { Controller } from "../types/Controller.ts";
 import createRoutes from "./createRoutes.js";
 import createRouterController from '../common/createRouterController.js';
 import render from "./render.js";
@@ -133,10 +133,10 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
         return async () => {};
     }
 
-    function setupRouting(): {controller?: Controller, routes?: object} {
+    function setupRouting(): {controller?: Controller<any, any, any>, routes?: object} {
 
         const result: {
-            controller?: Controller;
+            controller?: Controller<any, any, any>;
             routes?: object;
         } = {
             routes: config?.router?.disabled !== true ? createRoutes(config?.router?.path) : {}
@@ -148,11 +148,11 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 routes: result.routes,
                 routingDir: config?.router?.path,
                 // controllers
-            });
+            }) as Controller<any, any, any>;
 
         } else if(!("controller" in config)) {
             
-            result.controller = async () => ({ html: "Error: no controller defined" });
+            result.controller = async () => ({model: {}, html: "Error: no controller defined" });
 
         }
 
@@ -249,18 +249,20 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 
                 const hash: string | undefined = config.production ? undefined : Math.round(Math.random()*100000000).toString(16);
 
-                const state = await getAppState({
+                const context = {
                     ...(config?.context ?? {}),
                     request: extendedRequest,
                     hash: hash
-                });
+                };
+
+                const state = await getAppState(context);
 
                 if (state instanceof Response) return state;
 
-                if ("redirect" in (state.model ?? {})) {
+                if ("redirect" in context) {
                     return new Response("", {
                         status: 302,
-                        headers: { location: state.model?.redirect as string }
+                        headers: { location: context.redirect as string }
                     });
                 }
             
@@ -278,7 +280,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                                     path: ${config?.router?.path ? `"${config?.router?.path}"` : "null"},
                                 },
                                 model: ${JSON.stringify(state.model)},
-                                context: ${JSON.stringify(config?.context)},
+                                context: ${JSON.stringify(context)},
                                 tailwindHash: "${tailwindHash}",
                                 hotReload: ${hotReload},
                                 ${config?.router?.disabled === true && controller ? `controller: ${controller.toString()},` : ""}

@@ -3,23 +3,68 @@ import { readAllSync } from "@std/io";
 import { existsSync } from "@std/fs";
 import { contentType } from "@std/media-types";
 import { transpileDirectory, transpileFile } from "./transpile.ts";
-import bundleControlles from "./bundleControllers.js";
+import { createRoutesFile } from "./bundleControllers.js";
+
+import * as esbuild from "npm:esbuild@0.20.2";
+import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.10.3";
+
 import type { JourneyConfig } from "../types/JourneyConfig.ts";
 import type { Controller } from "../types/Controller.ts";
-import createRoutes from "./createRoutes.js";
+
+import { createRoutes } from "./createRoutes.js";
 import createRouterController from '../common/createRouterController.js';
 import render from "./render.js";
 
 export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
-    await showLoadingWhileTask(transpileDirectory("src"), "Building...");
+    // await showLoadingWhileTask(transpileDirectory("src"), "Building...");
 
     if(config.production === true) {
         
-        await showLoadingWhileTask(
-            bundleControlles({routingDir: "lib/pages", imports: [], outputFile: "public/main.js"}), 
-            "Bundling..."
-        );
+        // await showLoadingWhileTask(
+        //     bundleControlles({routingDir: "lib/pages", imports: [], outputFile: "public/main.js"}), 
+        //     "Bundling..."
+        // );
+
+        (async () => {
+
+            const routesFileName = createRoutesFile("src/pages", []);
+
+            const watchPlugin = {
+                name: "watch-plugin",
+                setup(build) {
+                    build.onEnd((result) => {
+                        if (result.errors.length > 0) {
+                            console.error("❌ Error durante la reconstrucción:");
+                            console.error(result.errors);
+                        } else {
+                            console.log(
+                                `✅ Reconstrucción exitosa: ${
+                                    new Date().toLocaleTimeString()
+                                }`,
+                            );
+                        }
+                    });
+                },
+            };
+            
+            const ctx = await esbuild.context({
+                plugins: [
+                    ...denoPlugins({ configPath: `${Deno.cwd()}/deno.json` }),
+                    watchPlugin, // Agregamos el plugin personalizado
+                ],
+                entryPoints: [routesFileName],
+                outfile: "./public/main.js",
+                bundle: true,
+                format: "esm",
+            });
+            
+            // Inicia el modo watch
+            await ctx.watch();
+            
+            console.log("⚡ Build inicial completada, observando cambios...");
+
+        });
 
     }else{
         
@@ -27,7 +72,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
     }
 
-    const buildTailwind = await buildTailwindFactory();
+    // const buildTailwind = await buildTailwindFactory();
 
     const tailwindHash = await fnv1aFromFile("public/tailwind.css");
 
@@ -213,14 +258,12 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
     };
 
 
-    
-
     async function defaultHandler (request: Request): Promise<Response> {
+
         
         if (hotReload && request.headers.get("upgrade") === "websocket") {
             return handleWebSocket(request);
         }
-    
         
         const extendedRequest = {
             method: request.method,

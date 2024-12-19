@@ -1,8 +1,8 @@
 import { existsSync, walkSync } from "@std/fs";
 
-export default (routingDir) => {
+export const createRoutes = (routingDir) => {
 
-    routingDir = (routingDir ?? "./lib/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
+    routingDir = (routingDir ?? "./src/pages").replaceAll("%20", " "); //.replace(/^\//g, "");
 
     const routes = {};
 
@@ -14,7 +14,9 @@ export default (routingDir) => {
 
         const path = dirEntry.path.replaceAll("\\", "/").replace(new RegExp(`^${baseDir}`, "gi"), "");
 
-        const route = path + "/" + path.split("/").pop() + ".js";
+        const filename = path + "/" + path.split("/").pop();
+
+        const route = filename + getFileExtension(baseDir + filename);
 
         if(path != "") {
             
@@ -32,15 +34,15 @@ export default (routingDir) => {
 
         }else{
 
-            if(existsSync(baseDir + "/index.js")) {
+            if(existsSync(baseDir + "/index" + getFileExtension(baseDir + "/index"))) {
 
-                routes["/"] = {path: "/", args: [], regexp: "^/$", route: "/index.js"};
+                routes["/"] = {path: "/", args: [], regexp: "^/$", route: "/index" + getFileExtension(baseDir + "/index") };
 
             }
 
-            if(existsSync(baseDir + "/root.js")) {
+            if(existsSync(baseDir + "/root" + getFileExtension(baseDir + "/root"))) {
 
-                routes["root"] = {path: "", args: [], regexp: "^root$", route: "/root.js"};
+                routes["root"] = {path: "", args: [], regexp: "^root$", route: "/root" + getFileExtension(baseDir + "/root") };
 
             }
 
@@ -50,3 +52,9 @@ export default (routingDir) => {
     return routes;
 
 }
+
+const getFileExtension = (filename) =>
+    (existsSync(filename + ".jsx") ? ".jsx" :
+        (existsSync(filename + ".ts") ? ".ts" :
+            (existsSync(filename + ".tsx") ? ".tsx" :
+                ".js")));

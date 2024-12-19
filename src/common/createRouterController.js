@@ -5,9 +5,9 @@ export default (config) => {
     const routes = config?.routes ?? {};
     const controllers = config?.controllers ?? {};
     const baseDir = typeof Deno != "undefined" ? 
-        ("file:///" + Deno.cwd() + "/" + (config?.routingDir ?? "lib/pages")) 
+        ("file:///" + Deno.cwd() + "/" + (config?.routingDir ?? "src/pages")) 
     :
-        (location.protocol + "//" + location.host + "/" + (config?.routingDir ?? "lib/pages"))
+        (location.protocol + "//" + location.host + "/" + (config?.routingDir ?? "src/pages"))
     ;
 
     var hash = null;

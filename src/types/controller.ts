@@ -1,6 +1,6 @@
-import type { Context } from "./Context.ts";
-import type { Message } from "./Message.ts";
-import type { State } from "./State.ts";
+import type { Context } from "./context.ts";
+import type { Message } from "./message.ts";
+import type { State } from "./state.ts";
 
 export interface Controller<ModelType, MessageDataType, ContextType extends Context> {
     (

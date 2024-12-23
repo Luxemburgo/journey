@@ -1,4 +1,4 @@
-import type { Message } from "./Message.ts";
+import type { Message } from "./message.ts";
 
 
 export interface Command<OptionsType, MessageDataType> {

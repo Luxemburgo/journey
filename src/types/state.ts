@@ -1,4 +1,4 @@
-import type { CommandHandler } from "./Command.ts";
+import type { CommandHandler } from "./command.ts";
 
 export interface State<ModelType> {
     model: ModelType,

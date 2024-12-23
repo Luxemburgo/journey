@@ -10,16 +10,16 @@ export default (config) => {
         (location.protocol + "//" + location.host + "/" + (config?.routingDir ?? "src/pages"))
     ;
 
-    var hash = null;
+    // var hash = null;
 
     return async (model, message, context) => {
 
-        if(hash != (context?.hash ?? null)) {
-            hash = context?.hash;
-            Object.keys(controllers).forEach(key => {
-                if(key!="/root.js" || controllers[key]!==null) delete controllers[key];
-            });
-        }
+        // if(hash != (context?.hash ?? null)) {
+        //     hash = context?.hash;
+        //     Object.keys(controllers).forEach(key => {
+        //         if(key!="/root.js" || controllers[key]!==null) delete controllers[key];
+        //     });
+        // }
 
 
         if(!message && !context?.url) {
@@ -86,7 +86,7 @@ export default (config) => {
                 document.body.inert = true;
             }
 
-            const module = (await import(baseDir + context.controller + (hash ? "?hash=" + hash : "")));
+            const module = (await import(baseDir + context.controller));
 
             // const capitalizeFirstLetter = string => string.charAt(0).toUpperCase() + string.slice(1);
 
@@ -109,7 +109,7 @@ export default (config) => {
             if("root" in routes && !(routes.root.route in controllers)) {
                 try {
                     
-                    controllers[routes.root.route] = await import(baseDir + routes.root.route + (hash ? "?hash=" + hash : ""));
+                    controllers[routes.root.route] = await import(baseDir + routes.root.route);
                     
                 } catch (error) {
                     

@@ -23,9 +23,11 @@ function updateEvents(el, callback) {
 
     (el.listeners ?? []).forEach(listener => el.removeEventListener(listener.eventName, listener.handler));
 
+    delete(el.listeners);
+
     if(el.hasAttribute("messages")) {
 
-        if(!el.listeners) el.listeners = [];
+        el.listeners = [];
 
         const messages = el.getAttribute("messages");
 
@@ -70,7 +72,7 @@ function updateEvents(el, callback) {
 
     if(el.tagName == "A") {
 
-        if(!el.onclick) {
+        // if(!el.onclick) {
 
             ////console.log("link updated", el);
 
@@ -101,7 +103,7 @@ function updateEvents(el, callback) {
                 }
 
             }
-        }
+        // }
     }
 
 }
@@ -121,34 +123,35 @@ function addEvents(callback) {
 
 const domParser = new DOMParser();
 
-export async function render(config) {
+export async function render(message) {
 
     const profiling = [{duration: 0, total: 0, stage: "start", time: performance.now()}];
 
-    if((config?.message?.controller ?? config?.model?.controller ?? "") != (config?.model?.controller ?? "") ) {
-        return;
-    }
+    // if((config?.message?.controller ?? config?.model?.controller ?? "") != (config?.model?.controller ?? "") ) {
+    //     return;
+    // }
 
-    let state = config?.controller ? 
+    const config = {
+        controller: window.journey.controller,
+        model: window.journey.model,
+        context: window.journey.context ?? {},
+    };
+
+    const state = config?.controller ? 
         
-        await config.controller(config.model, config.message, config.context)
+        await config.controller(config.model, message, config.context)
 
     :
         ({model: config?.model})
     ;
 
-    if(typeof state == "string") state = {html: state};
+    // if(typeof state == "string") state = {html: state};
 
-    state.model = state.model ?? {};
 
-    config.model = state?.model;
-    
-    window.journey = {
-        ...(window.journey ?? {}),
-        model: config.model,
-        context: config.context
-    };
+    window.journey.model = config.model = state?.model ?? {};
 
+
+    const callback = msg => render(msg);
 
     if(state.html) {
 
@@ -162,7 +165,7 @@ export async function render(config) {
 
         // let time = performance.now();
 
-        state.html = /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${config.context?.hash || window.journey.tailwindHash}">` 
+        state.html = /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${window.journey.hashes.tailwind}">` 
         + (state.html.outerHTML ?? state.html);
 
         const newDOM = domParser.parseFromString(state.html, "text/html").documentElement;
@@ -184,27 +187,26 @@ export async function render(config) {
             document.startViewTransition(() => {
                 const changes = DOMDiff(document.documentElement, newDOM, profiling)
 
-                diffEvents(changes, message => render({...config, model: window.journey.model, message}));
+                diffEvents(changes, callback);
             });
 
         }else{
 
             const changes = DOMDiff(document.documentElement, newDOM, profiling)
 
-            diffEvents(changes, message => render({...config, model: window.journey.model, message}));
+            diffEvents(changes, callback);
 
             // console.log(profiling.slice(-1)[0].total, profiling, changes);
             
         }
 
         if(!window.journey?.DOMUpdated) {
-            addEvents(message => render({...config, model: window.journey.model, message}));
+            addEvents(callback);
             window.journey.DOMUpdated = true;
         }
     
 
     }
-
 
     
     // if("stateHistory" in window && !window.play) {
@@ -214,10 +216,9 @@ export async function render(config) {
   
     (state.commands ?? []).forEach(command => {
             
-        command( message => render({...config, message}) );
+        command( callback );
 
     });
-
 
  
     return state;

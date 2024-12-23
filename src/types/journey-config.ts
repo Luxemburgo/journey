@@ -1,6 +1,6 @@
-import type { Controller } from "./Controller.ts";
-import type { Context } from "./Context.ts";
-import type { Model } from "./Model.ts";
+import type { Controller } from "./controller.ts";
+import type { Context } from "./context.ts";
+import type { Model } from "./model.ts";
 
 export interface JourneyConfig<ModelType extends Model = Model, MessageDataType = any, ContextType extends Context = Context> {
     controller?: Controller<ModelType, MessageDataType, ContextType>;

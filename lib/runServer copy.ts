@@ -19,64 +19,22 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
     // await showLoadingWhileTask(transpileDirectory("src"), "Building...");
 
-    if(config.production === true) {
+    // if(config.production === true) {
         
-        // await showLoadingWhileTask(
-        //     bundleControlles({routingDir: "lib/pages", imports: [], outputFile: "public/main.js"}), 
-        //     "Bundling..."
-        // );
+    //     await showLoadingWhileTask(
+    //         bundleControlles({routingDir: "lib/pages", imports: [], outputFile: "public/main.js"}), 
+    //         "Bundling..."
+    //     );
 
-        (async () => {
-
-            const routesFileName = createRoutesFile("src/pages", []);
-
-            const watchPlugin = {
-                name: "watch-plugin",
-                setup(build) {
-                    build.onEnd((result) => {
-                        if (result.errors.length > 0) {
-                            console.error("❌ Error durante la reconstrucción:");
-                            console.error(result.errors);
-                        } else {
-                            console.log(
-                                `✅ Reconstrucción exitosa: ${
-                                    new Date().toLocaleTimeString()
-                                }`,
-                            );
-                        }
-                    });
-                },
-            };
-            
-            const ctx = await esbuild.context({
-                plugins: [
-                    ...denoPlugins({ configPath: `${Deno.cwd()}/deno.json` }),
-                    watchPlugin, // Agregamos el plugin personalizado
-                ],
-                entryPoints: [routesFileName],
-                outfile: "./public/main.js",
-                bundle: true,
-                format: "esm",
-            });
-            
-            // Inicia el modo watch
-            await ctx.watch();
-            
-            console.log("⚡ Build inicial completada, observando cambios...");
-
-        });
-
-    }else{
+    // }else{
         
-        setupFsWatch();
+    //     setupFsWatch();
 
-    }
+    // }
 
-    // const buildTailwind = await buildTailwindFactory();
 
-    const tailwindHash = await fnv1aFromFile("public/tailwind.css");
 
-    const bundleHash = await fnv1aFromFile("public/main.js");
+    const hashes = {tailwind : "", bundle: ""};
     
     // const controllers = (await import("file:///" + Deno.cwd() + "/public/main.js")).controllers;
     
@@ -86,6 +44,10 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
     const hotReload: boolean = !(config.production ?? false);
 
     const {routes, controller} = setupRouting();
+
+    const buildTailwind = await buildTailwindFactory();
+
+    await bundleControllers();
 
 
     function setupFsWatch(): void {
@@ -137,6 +99,67 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
     }
 
+    async function bundleControllers() {
+
+        const routesFileName = createRoutesFile("src/pages", []);
+
+        const watchPlugin = {
+            name: "watch-plugin",
+            setup(build) {
+                build.onEnd(async (result) => {
+                    if (result.errors.length > 0) {
+                        
+                        console.error("❌ Error durante la reconstrucción:");
+                        console.error(result.errors);
+
+                    } else {
+
+                        console.log(
+                            `✅ Reconstrucción exitosa: ${
+                                new Date().toLocaleTimeString()
+                            }`,
+                        );
+
+                        hashes.bundle = await fnv1aFromFile("public/main.js");
+
+                        buildTailwind();
+
+                        if(hotReload) sockets.forEach(socket => socket.send(JSON.stringify({hashes})));
+
+                    }
+                });
+            },
+        };
+        
+        const ctx = await esbuild.context({
+            plugins: [
+                ...denoPlugins({ configPath: `${Deno.cwd()}/deno.json` }),
+                watchPlugin, // Agregamos el plugin personalizado
+            ],
+            entryPoints: [routesFileName],
+            outfile: "./public/main.js",
+            bundle: true,
+            format: "esm",
+            logLevel: "error"
+        });
+        
+        if(hotReload) {
+            
+            await ctx.watch();
+        
+            console.log("⚡ Build inicial completada, observando cambios...");
+        
+        }else{
+
+            await ctx.rebuild();
+        
+            console.log("⚡ Build completada");
+
+        }
+
+
+    }
+
     async function buildTailwindFactory(): Promise<() => Promise<void>> {
 
         try {
@@ -157,21 +180,45 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
     
             }catch {}
 
-            const importPath = "./tailwind.js";
 
-            const buildTailwindAndSave = tailwindConfig ? (await import(importPath)).buildTailwindAndSave : null;
+            if(tailwindConfig) {
 
-            const buildFn = async () => {
-                if(buildTailwindAndSave) 
-                    await showLoadingWhileTask(
-                        buildTailwindAndSave(tailwindConfig, inputCSS, "public/tailwind.css"),
-                        `Compiling tailwind...`
-                    );                    
+                // const buildTailwindAndSave = tailwindConfig ? (await import(importPath)).buildTailwindAndSave : null;
+
+                // return async () => {
+                //     if(buildTailwindAndSave) 
+                //         await showLoadingWhileTask(
+                //             buildTailwindAndSave(tailwindConfig, inputCSS, "public/tailwind.css"),
+                //             `Compiling tailwind...`
+                //         );                    
+                // }
+
+                const importPath = "./tailwindPlugin.js";
+
+                const tailwindPlugin = (await import(importPath)).tailwindPlugin;
+
+                const ctx = await esbuild.context({
+                    plugins: [
+                        tailwindPlugin(tailwindConfig, inputCSS),
+                    ],
+                    entryPoints: ["tailwind-input"],
+                    outfile: "./public/tailwind.css",
+                    bundle: false,
+                    format: "esm",
+                });
+
+                await ctx.watch();
+                
+                console.log("⚡ Tailwind compilado");
+
+                return async () => {
+                    console.log("🔄 Recompilando tailwind...");
+                    await ctx.rebuild();
+                    hashes.tailwind = await fnv1aFromFile("public/tailwind.css");
+                    console.log("✅ Listo para continuar");
+                }
+
             }
-
-            buildFn();
-
-            return buildFn;
 
         }catch {}
 
@@ -310,7 +357,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 }
             
                 body = 
-                    /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${hash || tailwindHash}">` +
+                    /*html*/`<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${hashes.tailwind}">` +
                     ((typeof state?.html == "object" ? state?.html?.outerHTML : null) ?? state?.html ?? "") + /*html*/`                    
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
@@ -324,12 +371,15 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                                 },
                                 model: ${JSON.stringify(state.model)},
                                 context: ${JSON.stringify(context)},
-                                tailwindHash: "${tailwindHash}",
+                                hashes: {
+                                    tailwind: "${hashes.tailwind}",
+                                    bundle: "${hashes.bundle}"
+                                },
                                 hotReload: ${hotReload},
                                 ${config?.router?.disabled === true && controller ? `controller: ${controller.toString()},` : ""}
                             };
                         </script>
-                        ${config?.production === true ? `<script src="/main.js?h=${bundleHash}" type="module"></script>` : ""}
+                        <script src="/main.js?hash=${hashes.bundle}" type="module"></script>
                     </div>
                 `;
                 //${config?.renderCallback ? `renderCallback: ${config.renderCallback.toString()},` : ""}

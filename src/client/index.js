@@ -4,12 +4,7 @@ import { render } from "./render.js";
 
 window.onpopstate = e => {
 
-    render({
-        model: window.journey.model,
-        message: {name: "navigation", isPopState: true, data: urlToObj(new URL(location))},
-        controller: window.journey.controller,
-        context: window.journey.context ?? {}
-    });
+    render({name: "navigation", isPopState: true, data: urlToObj(new URL(location))});
 
 }
 
@@ -53,7 +48,7 @@ window.addEventListener("load", async () => {
         socket.onopen = e => {
             console.log("Connection open");
             
-            socket.send("ping");
+            // socket.send("ping");
 
         };
 
@@ -77,9 +72,31 @@ window.addEventListener("load", async () => {
 
         socket.onmessage = e => {
             // console.log(e.data);
-            if(e.data =="Update!") {
-                window.updateHash(Math.round(Math.random()*100000000).toString(16));
-            }
+            // if(e.data =="Update!") {
+                // window.updateHash(Math.round(Math.random()*100000000).toString(16));
+            // }
+            
+            const data = JSON.parse(e.data);
+
+            window.journey.hashes.tailwind = data.hashes.tailwind;
+            window.journey.hashes.bundle = data.hashes.bundle;
+            
+            document.body.classList.add("animate-pulse");
+
+            import(window.location.origin + "/main.js?hash=" + window.journey.hashes.bundle)
+                .then(module => {
+
+                    window.journey.controllers = module.controllers;
+
+                    window.journey.controller = createRouterController({
+                        routingDir: window.journey.router?.path,
+                        routes: window.journey.router?.routes,
+                        controllers: window.journey.controllers
+                    });
+
+                    render();
+                    
+                });
         };
 
         
@@ -92,11 +109,7 @@ window.addEventListener("load", async () => {
 
     }
 
-    await render({
-        model: window.journey.model,
-        controller: window.journey.controller,
-        context: window.journey.context ?? {}
-    });
+    await render();
 
     document.querySelector("[autofocus]")?.focus();
 
@@ -113,11 +126,7 @@ window.updateHash = (hash) => {
 
         window.journey.context.hash = hash;
 
-        render({
-            model: window.journey.model,
-            controller: window.journey.controller,
-            context: window.journey.context ?? {}
-        });
+        render();
 
     }
 

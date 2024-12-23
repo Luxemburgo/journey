@@ -1,5 +1,5 @@
-import type { Command } from "./types/Command.ts";
-import type { Context } from "./types/Context.ts";
+import type { Command } from "../types/command.ts";
+import type { Context } from "../types/context.ts";
 
 export interface Navigate extends Command<{messageName?: string, url: string, redirect?: boolean, stateAction?: "replace" | "push"}, {url: URL, stateAction?: "replace" | "push"}> {
 }

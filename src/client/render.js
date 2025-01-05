@@ -1,6 +1,6 @@
 // import { deepClone } from "../../tools/utils.js";
 import { DOMDiff } from "./DOMDiff.js";
-import { navigate } from "../common/commands.js";
+import { navigate } from "../server/commands.js";
 
 function diffEvents(changes, callback) {
 

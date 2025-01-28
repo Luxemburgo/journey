@@ -1,6 +1,6 @@
 // import { deepClone } from "../../tools/utils.js";
 import { DOMDiff } from "./DOMDiff.js";
-import { navigate } from "../server/commands.js";
+import { legacyNavigate } from "../commands/legacy-commands.js";
 
 function diffEvents(changes, callback) {
 
@@ -91,7 +91,7 @@ function updateEvents(el, callback) {
                 
                 if(!el.listeners?.filter(e => e.eventName=="click").length) {
 
-                    await navigate(
+                    await legacyNavigate(
                         {
                             data: {url: e.currentTarget.href, stateAction: e.currentTarget.getAttribute("data-state")},
                             message: e.currentTarget.getAttribute("data-message") ?? "navigation"

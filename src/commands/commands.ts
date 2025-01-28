@@ -1,6 +1,8 @@
 import type { Command } from "../types/command.ts";
 import type { Context } from "../types/context.ts";
 
+export { legacyNavigate, legacyNavigateBack } from "./legacy-commands.js";
+
 export interface Navigate extends Command<{messageName?: string, url: string, redirect?: boolean, stateAction?: "replace" | "push"}, {url: URL, stateAction?: "replace" | "push"}> {
 }
 
@@ -27,8 +29,10 @@ export const createNavigate = (context: Context): Navigate =>
             if(url && typeof window != "undefined") {
                 
                 if(stateAction == "replace") 
+                    //@ts-ignore
                     window.history.replaceState({}, null, parsedUrl.href);
                 else {
+                    //@ts-ignore
                     window.history.pushState({}, null, parsedUrl.href);
                 }
 

@@ -1,3 +1,4 @@
+import { DOMParser as FuzeDOMParser } from "jsr:@b-fuze/deno-dom@0.1.49";
 
 let document = null;
 
@@ -9,7 +10,9 @@ if (typeof DOMParser !== "undefined") {
     
 } else {
     
-    Parser = (await import("jsr:@b-fuze/deno-dom")).DOMParser;
+    // const denoDom = "jsr:@b-fuze/deno-dom";
+    // Parser = (await import(denoDom)).DOMParser;
+    Parser = FuzeDOMParser;
 
 }
 

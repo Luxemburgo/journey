@@ -1,4 +1,4 @@
-import { navigate, navigateBack } from "./commands.js";
+import { legacyNavigate, legacyNavigateBack } from "./commands/legacy-commands.js";
 
 export default (config) => {
     
@@ -26,7 +26,7 @@ export default (config) => {
 
             return {
                 model: model ?? {},
-                commands: [navigate({context, model})]
+                commands: [legacyNavigate({context, model})]
             }
 
         }
@@ -35,7 +35,7 @@ export default (config) => {
             
             return {
                 model,
-                commands: [navigateBack()]
+                commands: [legacyNavigateBack()]
             }
 
         }

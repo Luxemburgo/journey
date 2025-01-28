@@ -1,9 +1,11 @@
 {
     "name": "@luxemburgo/journey",
-    "version": "0.25.1",
+    "version": "0.26.7",
     "exports": {
-        ".": "./src/server/run-server.ts",
-        "./types": "./src/types/types.ts"
+        ".": "./mod.ts",
+        "./react": "./src/jsx.ts",
+        "./types": "./src/types/types.ts",
+        "./commands": "./src/commands/commands.ts"
     },
     "license": "MIT",
     "publish": {

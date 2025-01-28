@@ -1,5 +1,5 @@
-import { urlToObj } from "../server/utils.js"
-import createRouterController from "../server/create-router-controller.js";
+import { urlToObj } from "../utils.js"
+import createRouterController from "../create-router-controller.js";
 import { render } from "./render.js";
 
 window.onpopstate = e => {

@@ -3,11 +3,11 @@ import { existsSync } from "@std/fs";
 import { contentType } from "@std/media-types";
 import { createRoutesFile } from "./create-routes-file.js";
 
-import * as esbuild from "npm:esbuild@0.20.2";
-import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.10.3";
+import * as esbuild from "npm:esbuild@0.24.2";
+import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.11.1";
 
-import type { JourneyConfig } from "../types/journey-config.ts";
-import type { Controller } from "../types/controller.ts";
+import type { JourneyConfig } from "./types/journey-config.ts";
+import type { Controller } from "./types/controller.ts";
 
 import { createRoutes } from "./create-routes.js";
 import createRouterController from './create-router-controller.js';
@@ -38,7 +38,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 if("onEnd" in build && typeof build.onEnd == "function") build.onEnd(async (result : {errors: []}) => {
                     if (result.errors.length > 0) {
                         
-                        console.error("❌ Rebuild failed:", result.errors);
+                        console.error("❌ Rebuild failed");
 
                     } else {
 
@@ -64,7 +64,8 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
             outfile: "./public/main.js",
             bundle: true,
             format: "esm",
-            logLevel: "error"
+            logLevel: "error",
+            external: ["pnpapi"]
         });
         
         if(hotReload) {
@@ -260,7 +261,10 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                 
                 const hash: string | undefined = config.production ? undefined : Math.round(Math.random()*100000000).toString(16);
 
-                const context = {
+                const context: {
+                    request?: typeof extendedRequest;
+                    hash?: string;
+                } = {
                     ...(config?.context ?? {}),
                     request: extendedRequest,
                     hash: hash
@@ -276,13 +280,15 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                         headers: { location: context.redirect as string }
                     });
                 }
+
+                delete context.request;
             
                 content.body = 
                     `<link id="tailwind" rel="stylesheet" href="/tailwind.css?hash=${hashes.tailwind}">
                     ${((typeof state?.html == "object" ? state?.html?.outerHTML : null) ?? state?.html ?? "")}
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
-                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey/src/client/index.js"}" type="module"></script>
+                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@11bd902/src/client/index.js"}" type="module"></script>
                         <script>                            
                             window.journey = ${JSON.stringify({
                                 router: {
@@ -293,8 +299,8 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                                 model: state.model,
                                 context: context,
                                 hashes: {
-                                    tailwind: "${hashes.tailwind}",
-                                    bundle: "${hashes.bundle}"
+                                    tailwind: hashes.tailwind,
+                                    bundle: hashes.bundle
                                 },
                                 hotReload: hotReload
                             })};

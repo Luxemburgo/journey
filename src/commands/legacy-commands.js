@@ -1,6 +1,6 @@
-import {urlToObj} from "./utils.js"
+import {urlToObj} from "../utils.js"
 
-export const navigate = (options) => {
+export const legacyNavigate = (options) => {
 
     return async callback => {
 
@@ -43,7 +43,7 @@ export const navigate = (options) => {
 
 }
 
-export const navigateBack = () => {
+export const legacyNavigateBack = () => {
 
     return async callback => {
 

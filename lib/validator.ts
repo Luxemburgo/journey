@@ -464,7 +464,7 @@ const bookValidator = isObject({
 });
 
 const book = {
-    id: 1234,
+    id: "12345",
     ids: ["1234", "5678", 6, 7, 8, 9],
     title: "The Great Gatsby",
     state: "Available",

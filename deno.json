@@ -1,6 +1,6 @@
 {
     "name": "@luxemburgo/journey",
-    "version": "0.26.7",
+    "version": "0.26.9",
     "exports": {
         ".": "./mod.ts",
         "./react": "./src/jsx.ts",

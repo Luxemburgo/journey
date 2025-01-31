@@ -12,6 +12,7 @@ import type { Controller } from "./types/controller.ts";
 import { createRoutes } from "./create-routes.js";
 import createRouterController from './create-router-controller.js';
 import render from "./render.js";
+import { deepClone } from "./utils.js";
 
 export async function runServer(config: JourneyConfig = {}): Promise<void> {
 
@@ -218,7 +219,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
     async function getAppState (context: object): Promise<{model?: {[key: string]: any;}, html?: {[key: string]: any;} | string} | Response> {
     
         const state = await render({
-            model: (config?.model ?? {}),
+            model: deepClone(config?.model ?? {}),
             controller: controller,
             context: context
         });
@@ -288,7 +289,7 @@ export async function runServer(config: JourneyConfig = {}): Promise<void> {
                     ${((typeof state?.html == "object" ? state?.html?.outerHTML : null) ?? state?.html ?? "")}
                     <div id="scripts">
                         <style id="js-only-style">.js-only {visibility: hidden;} .nojs-only {visibility: visible !important;}</style>
-                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@11bd902/src/client/index.js"}" type="module"></script>
+                        <script src="${config?.clientScriptURL || "https://cdn.jsdelivr.net/gh/Luxemburgo/journey@7ad0a5e/src/client/index.js"}" type="module"></script>
                         <script>                            
                             window.journey = ${JSON.stringify({
                                 router: {
